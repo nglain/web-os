@@ -1,0 +1,3807 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web OS - Операционная Система</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            touch-action: manipulation;
+        }
+
+        /* Экран приветствия маскота */
+        #mascot-welcome {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20000;
+            color: white;
+            animation: fadeIn 1s ease;
+        }
+
+        #mascot-welcome .big-mascot {
+            font-size: 150px;
+            margin-bottom: 30px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        #mascot-welcome h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        #mascot-welcome p {
+            font-size: 20px;
+            margin-bottom: 40px;
+            opacity: 0.9;
+            text-align: center;
+            max-width: 600px;
+        }
+
+        #mascot-welcome .start-button {
+            padding: 20px 60px;
+            font-size: 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        #mascot-welcome .start-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.6);
+        }
+
+        /* Экран выбора устройства */
+
+        /* Экран выключения */
+        #shutdown-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+            cursor: pointer;
+            transition: opacity 0.5s ease;
+        }
+
+        #shutdown-screen.active {
+            display: flex;
+        }
+
+        .power-button-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: pulse 2s infinite;
+        }
+
+        .power-button-icon {
+            width: 120px;
+            height: 120px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 64px;
+            color: rgba(255,255,255,0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .power-button-container:hover .power-button-icon {
+            border-color: rgba(255,255,255,0.6);
+            color: rgba(255,255,255,0.6);
+            transform: scale(1.1);
+        }
+
+        .power-text {
+            color: rgba(255,255,255,0.4);
+            margin-top: 20px;
+            font-size: 18px;
+            letter-spacing: 2px;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.5;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* Экран блокировки */
+        #lock-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 50000;
+            color: white;
+            cursor: pointer;
+        }
+
+        #lock-screen.active {
+            display: flex;
+        }
+
+        .lock-time {
+            font-size: 96px;
+            font-weight: 200;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+        }
+
+        .lock-date {
+            font-size: 24px;
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+
+        .lock-hint {
+            font-size: 16px;
+            opacity: 0.7;
+            animation: fadeInOut 2s infinite;
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% {
+                opacity: 0.4;
+            }
+            50% {
+                opacity: 0.8;
+            }
+        }
+
+        /* Анимации переходов */
+        .fade-out {
+            animation: fadeOut 0.5s forwards;
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Загрузочный экран */
+        #boot-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            color: white;
+        }
+
+        #boot-screen h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+            animation: fadeIn 1s ease;
+        }
+
+        #boot-screen .logo {
+            font-size: 80px;
+            margin-bottom: 30px;
+            animation: pulse 2s infinite;
+        }
+
+        #boot-screen p {
+            font-size: 18px;
+            margin-bottom: 10px;
+            opacity: 0.8;
+        }
+
+        #boot-screen .boot-status {
+            font-size: 14px;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 30px;
+            min-height: 20px;
+        }
+
+        #boot-screen .loading-bar {
+            width: 300px;
+            height: 20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        #boot-screen .loading-progress {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%);
+            transition: width 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #boot-screen .loading-progress::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%);
+            }
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        #boot-screen .boot-timer {
+            margin-top: 20px;
+            font-size: 16px;
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* Рабочий стол */
+        #desktop {
+            width: 100vw;
+            height: 100vh;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080"><defs><linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23667eea"/><stop offset="100%" style="stop-color:%23764ba2"/></linearGradient></defs><rect fill="url(%23g1)" width="1920" height="1080"/></svg>') center/cover;
+            position: relative;
+            display: none;
+        }
+
+        /* Панель задач */
+        #taskbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 50px;
+            background: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            z-index: 1000;
+        }
+
+        #start-button {
+            padding: 8px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+
+        #start-button:hover {
+            transform: scale(1.05);
+        }
+
+        #taskbar-apps {
+            display: flex;
+            gap: 5px;
+            margin-left: 10px;
+            flex: 1;
+        }
+
+        .taskbar-app {
+            padding: 5px 15px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .taskbar-app:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        #clock {
+            color: white;
+            font-size: 14px;
+            padding: 0 15px;
+        }
+
+        #power-button {
+            padding: 8px 15px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        #power-button:hover {
+            background: #c0392b;
+            transform: scale(1.05);
+        }
+
+        /* Меню питания */
+        #power-menu {
+            position: fixed;
+            bottom: 60px;
+            right: 10px;
+            background: rgba(30, 30, 30, 0.98);
+            border-radius: 10px;
+            padding: 10px;
+            display: none;
+            z-index: 2000;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+        }
+
+        #power-menu.active {
+            display: block;
+        }
+
+        .power-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 20px;
+            color: white;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 200px;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .power-menu-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .power-menu-item .icon {
+            font-size: 20px;
+        }
+
+        /* Мобильная версия */
+        body.mobile-mode .desktop-icon {
+            width: 80px;
+        }
+
+        body.mobile-mode .desktop-icon .icon {
+            font-size: 36px;
+        }
+
+        body.mobile-mode .desktop-icon .label {
+            font-size: 10px;
+        }
+
+        body.mobile-mode .window {
+            min-width: 90vw;
+            left: 5vw !important;
+            width: 90vw !important;
+        }
+
+        body.mobile-mode #taskbar {
+            height: 60px;
+        }
+
+        body.mobile-mode #start-button {
+            padding: 10px 15px;
+            font-size: 12px;
+        }
+
+        body.mobile-mode .taskbar-app {
+            padding: 8px 12px;
+            font-size: 11px;
+        }
+
+        /* Комиксы */
+        #comics-gallery {
+            padding: 10px;
+        }
+
+        .comics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .comic-item {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .comic-item:hover {
+            transform: scale(1.05);
+        }
+
+        .comic-cover {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 64px;
+        }
+
+        .comic-info {
+            padding: 10px;
+        }
+
+        .comic-info h3 {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .comic-info p {
+            font-size: 11px;
+            color: #aaa;
+        }
+
+        .comic-viewer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 30000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .comic-viewer.active {
+            display: flex;
+        }
+
+        .comic-page {
+            max-width: 90%;
+            max-height: 80%;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .comic-nav {
+            display: flex;
+            gap: 20px;
+        }
+
+        .comic-nav button {
+            padding: 15px 30px;
+            font-size: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .comic-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        /* Меню Пуск */
+        #start-menu {
+            position: fixed;
+            bottom: 55px;
+            left: 10px;
+            width: 400px;
+            background: rgba(30, 30, 30, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 10px;
+            padding: 20px;
+            display: none;
+            z-index: 999;
+            color: white;
+        }
+
+        #start-menu h2 {
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .menu-section {
+            margin-bottom: 20px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 8px;
+            transition: background 0.2s;
+        }
+
+        .menu-item:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        .menu-item .icon {
+            font-size: 24px;
+            margin-right: 12px;
+        }
+
+        /* Иконки на рабочем столе */
+        .desktop-icon {
+            position: absolute;
+            width: 100px;
+            text-align: center;
+            cursor: pointer;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .desktop-icon:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .desktop-icon .icon {
+            font-size: 48px;
+            margin-bottom: 5px;
+        }
+
+        .desktop-icon .label {
+            font-size: 12px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        /* Окна */
+        .window {
+            position: absolute;
+            background: rgba(40, 40, 40, 0.98);
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            min-width: 400px;
+            min-height: 300px;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .window-header {
+            background: rgba(30, 30, 30, 0.95);
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+            user-select: none;
+        }
+
+        .window-title {
+            color: white;
+            font-weight: bold;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .window-controls button {
+            width: 30px;
+            height: 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .close-btn {
+            background: #ff5f57;
+            color: white;
+        }
+
+        .maximize-btn {
+            background: #ffbd2e;
+            color: white;
+        }
+
+        .minimize-btn {
+            background: #28c940;
+            color: white;
+        }
+
+        .window-content {
+            flex: 1;
+            padding: 20px;
+            color: white;
+            overflow: auto;
+        }
+
+        /* Менеджер приложений */
+        #app-manager {
+            padding: 20px;
+        }
+
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .app-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .app-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.1);
+        }
+
+        .app-card .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .app-card h3 {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .app-card p {
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 15px;
+        }
+
+        .download-btn {
+            padding: 8px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .download-btn.downloaded {
+            background: #28c940;
+            cursor: default;
+        }
+
+        /* Игра Змейка */
+        #snake-game {
+            text-align: center;
+        }
+
+        #snake-canvas {
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            background: #1a1a2e;
+            display: block;
+            margin: 20px auto;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        /* Игра Дуэль */
+        #duel-game {
+            text-align: center;
+        }
+
+        #duel-canvas {
+            border: 3px solid #764ba2;
+            border-radius: 10px;
+            background: linear-gradient(180deg, #2d1b4e 0%, #1a1a2e 100%);
+            display: block;
+            margin: 20px auto;
+            cursor: crosshair;
+        }
+
+        .health-bar {
+            width: 200px;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            margin: 10px auto;
+            overflow: hidden;
+        }
+
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff5f57 0%, #ffbd2e 100%);
+            transition: width 0.3s;
+        }
+
+        .controls-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        /* Галерея смайликов */
+        #emoji-gallery {
+            padding: 20px;
+        }
+
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 15px;
+        }
+
+        .emoji-item {
+            font-size: 48px;
+            text-align: center;
+            padding: 15px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .emoji-item:hover {
+            transform: scale(1.2);
+        }
+
+        /* Редактор программ */
+        #program-editor {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #program-code {
+            flex: 1;
+            background: #1a1a2e;
+            color: #00ff00;
+            border: none;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: none;
+            margin-bottom: 15px;
+        }
+
+        .editor-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .editor-buttons button {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 70px;
+            right: 20px;
+            background: rgba(40, 40, 40, 0.98);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            z-index: 2000;
+            animation: slideIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            border: 1px solid rgba(255,255,255,0.1);
+            max-width: 350px;
+        }
+
+        .notification::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px 0 0 12px;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+        }
+
+        /* Улучшенные окна */
+        .window {
+            position: absolute;
+            background: rgba(40, 40, 40, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1);
+            min-width: 400px;
+            min-height: 300px;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .window-header {
+            background: rgba(30, 30, 30, 0.95);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+            user-select: none;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .window-controls button {
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .window-controls button:hover {
+            transform: scale(1.1);
+        }
+
+        /* Чат с маскотом */
+        #chat-app {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        #chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .chat-message {
+            margin-bottom: 15px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .chat-message .sender {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chat-message .avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .chat-message.bot .avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .chat-message.hacker .avatar {
+            background: linear-gradient(135deg, #ff0000 0%, #8b0000 100%);
+        }
+
+        .chat-message .text {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 15px;
+            border-radius: 10px;
+            display: inline-block;
+            max-width: 80%;
+        }
+
+        .chat-message.bot .sender {
+            color: #667eea;
+        }
+
+        .chat-message.hacker .sender {
+            color: #ff4444;
+        }
+
+        .chat-message.hacker .text {
+            background: rgba(255,0,0,0.1);
+            border: 1px solid rgba(255,0,0,0.3);
+        }
+
+        #chat-input-area {
+            display: flex;
+            gap: 10px;
+        }
+
+        #chat-input {
+            flex: 1;
+            padding: 12px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+        }
+
+        #chat-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        #chat-send {
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        #chat-send:hover {
+            transform: scale(1.05);
+        }
+
+        /* Приложение Сообщения (Telegram-style) */
+        #messages-app {
+            display: flex;
+            height: 100%;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .chats-list {
+            width: 300px;
+            background: rgba(30,30,30,0.95);
+            border-right: 1px solid rgba(255,255,255,0.1);
+            overflow-y: auto;
+        }
+
+        .chat-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .chat-item:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .chat-item.active {
+            background: rgba(102, 126, 234, 0.3);
+        }
+
+        .chat-item-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .chat-item-avatar.robot {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .chat-item-avatar.hacker {
+            background: linear-gradient(135deg, #ff0000 0%, #8b0000 100%);
+        }
+
+        .chat-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .chat-item-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .chat-item-last-message {
+            font-size: 13px;
+            opacity: 0.7;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chat-item-time {
+            font-size: 12px;
+            opacity: 0.5;
+        }
+
+        .chat-view {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-view-header {
+            padding: 15px 20px;
+            background: rgba(40,40,40,0.95);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-view-header .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .chat-view-header .info h3 {
+            font-size: 16px;
+            margin-bottom: 2px;
+        }
+
+        .chat-view-header .info p {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .message.received {
+            background: rgba(255,255,255,0.1);
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+        }
+
+        .message.sent {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message-time {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-top: 5px;
+            text-align: right;
+        }
+
+        .message-input-area {
+            padding: 15px;
+            background: rgba(40,40,40,0.95);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            gap: 10px;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 12px 18px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(255,255,255,0.15);
+        }
+
+        .send-button {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .send-button:hover {
+            transform: scale(1.1);
+        }
+
+        .no-chat-selected {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.5;
+        }
+
+        .no-chat-selected .icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .no-chat-selected p {
+            font-size: 18px;
+        }
+
+        /* Маскот */
+        .mascot-container {
+            position: fixed;
+            bottom: 80px;
+            right: 30px;
+            z-index: 500;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .mascot-container:hover {
+            transform: scale(1.15);
+        }
+
+        .mascot {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.5);
+            animation: float 3s ease-in-out infinite;
+            position: relative;
+            border: 3px solid rgba(255,255,255,0.3);
+        }
+
+        .mascot::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            z-index: -1;
+            opacity: 0.3;
+            animation: pulse-ring 2s infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(1);
+                opacity: 0.3;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.1;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0.3;
+            }
+        }
+
+        .mascot.dead {
+            background: linear-gradient(135deg, #333 0%, #666 100%);
+            animation: none;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+        }
+
+        .mascot.dead::after {
+            content: '💀';
+            position: absolute;
+            top: -12px;
+            right: -12px;
+            font-size: 28px;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-12px);
+            }
+        }
+
+        .mascot-bubble {
+            position: absolute;
+            bottom: 85px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            color: #333;
+            padding: 12px 18px;
+            border-radius: 18px;
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .mascot-bubble::before {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid white;
+        }
+
+        .mascot-container:hover .mascot-bubble {
+            opacity: 1;
+        }
+
+        /* Экран смерти */
+        #death-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a0000 0%, #330000 50%, #1a0000 100%);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100000;
+            color: white;
+            animation: deathFadeIn 1s ease;
+        }
+
+        #death-screen.active {
+            display: flex;
+        }
+
+        @keyframes deathFadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .death-mascot {
+            font-size: 150px;
+            margin-bottom: 30px;
+            filter: grayscale(100%);
+            animation: deathPulse 2s infinite;
+        }
+
+        @keyframes deathPulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 0.5;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+        }
+
+        .death-text {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #ff4444;
+            text-shadow: 0 0 20px rgba(255,0,0,0.5);
+        }
+
+        .death-subtext {
+            font-size: 24px;
+            color: #ff6666;
+            margin-bottom: 40px;
+            text-align: center;
+            max-width: 600px;
+        }
+
+        .death-button {
+            padding: 15px 40px;
+            font-size: 20px;
+            background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .death-button:hover {
+            transform: scale(1.1);
+        }
+
+        .glitch {
+            animation: glitch 0.5s infinite;
+        }
+
+        @keyframes glitch {
+            0% {
+                transform: translate(0);
+            }
+            20% {
+                transform: translate(-2px, 2px);
+            }
+            40% {
+                transform: translate(-2px, -2px);
+            }
+            60% {
+                transform: translate(2px, 2px);
+            }
+            80% {
+                transform: translate(2px, -2px);
+            }
+            100% {
+                transform: translate(0);
+            }
+        }
+
+        /* Игра Geometry Dash */
+        #geometry-canvas {
+            border: 3px solid #ff6b6b;
+            border-radius: 10px;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+            display: block;
+            margin: 20px auto;
+        }
+
+        /* Игра Brawl Stars */
+        #brawl-canvas {
+            border: 3px solid #ffd93d;
+            border-radius: 10px;
+            background: linear-gradient(180deg, #2d3436 0%, #000000 100%);
+            display: block;
+            margin: 20px auto;
+            cursor: crosshair;
+        }
+
+        .brawl-health {
+            width: 150px;
+            height: 15px;
+            background: #333;
+            border-radius: 8px;
+            margin: 8px auto;
+            overflow: hidden;
+        }
+
+        .brawl-health-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00b894 0%, #00cec9 100%);
+            transition: width 0.2s;
+        }
+    </style>
+</head>
+<body>
+    <!-- Экран приветствия маскота -->
+    <div id="mascot-welcome">
+        <div class="big-mascot">🤖</div>
+        <h1>Привет! Я Робот!</h1>
+        <p>Добро пожаловать в Web OS - твою персональную операционную систему! Я буду твоим маскотом-помощником. Давай начнём!</p>
+        <button class="start-button" onclick="startFromWelcome()">🚀 Начать работу</button>
+    </div>
+
+    <!-- Экран выключения -->
+    <div id="shutdown-screen" onclick="turnOn()">
+        <div class="power-button-container">
+            <div class="power-button-icon">⏻</div>
+            <div class="power-text">Нажмите для включения</div>
+        </div>
+    </div>
+
+    <!-- Экран блокировки -->
+    <div id="lock-screen" onclick="unlockScreen()">
+        <div class="lock-time" id="lock-time-display">00:00</div>
+        <div class="lock-date" id="lock-date-display">Понедельник, 1 Января</div>
+        <div class="lock-hint">Нажмите чтобы разблокировать</div>
+    </div>
+
+    <!-- Экран смерти -->
+    <div id="death-screen">
+        <div class="death-mascot">🤖💀</div>
+        <div class="death-text glitch">СИСТЕМА УНИЧТОЖЕНА</div>
+        <div class="death-subtext">
+            Вы скачали VIP вирус от ???<br>
+            Ваш маскот был уничтожен...<br>
+            Нет пути назад.
+        </div>
+        <button class="death-button" onclick="restoreSystem()">🔄 Восстановить систему</button>
+    </div>
+
+    <!-- Загрузочный экран -->
+    <div id="boot-screen">
+        <div class="logo">🖥️</div>
+        <h1>Web OS</h1>
+        <p>Загрузка системы...</p>
+        <div class="boot-status" id="boot-status">Инициализация...</div>
+        <div class="loading-bar">
+            <div class="loading-progress" id="loading-progress"></div>
+        </div>
+        <div class="boot-timer" id="boot-timer">Осталось: 20 секунд</div>
+    </div>
+
+    <!-- Рабочий стол -->
+    <div id="desktop">
+        <!-- Иконки на рабочем столе -->
+        <div class="desktop-icon" style="top: 20px; left: 20px;" onclick="openApp('snake')">
+            <div class="icon">🐍</div>
+            <div class="label">Змейка</div>
+        </div>
+
+        <div class="desktop-icon" style="top: 150px; left: 20px;" onclick="openApp('duel')">
+            <div class="icon">⚔️</div>
+            <div class="label">Дуэль</div>
+        </div>
+
+        <div class="desktop-icon" style="top: 280px; left: 20px;" onclick="openApp('emoji')">
+            <div class="icon">😀</div>
+            <div class="label">Смайлики</div>
+        </div>
+
+        <div class="desktop-icon" style="top: 410px; left: 20px;" onclick="openApp('editor')">
+            <div class="icon">📝</div>
+            <div class="label">Редактор</div>
+        </div>
+
+        <div class="desktop-icon" style="top: 540px; left: 20px;" onclick="openApp('manager')">
+            <div class="icon">🏪</div>
+            <div class="label">Менеджер</div>
+        </div>
+
+        <div class="desktop-icon" style="top: 670px; left: 20px;" onclick="openApp('comics')">
+            <div class="icon">📚</div>
+            <div class="label">Комиксы</div>
+        </div>
+
+        <div class="desktop-icon" style="top: 800px; left: 20px;" onclick="openApp('chat')">
+            <div class="icon">💬</div>
+            <div class="label">Чат</div>
+        </div>
+
+        <div class="desktop-icon" style="top: 930px; left: 20px;" onclick="openApp('messages')">
+            <div class="icon">✉️</div>
+            <div class="label">Сообщения</div>
+        </div>
+
+        <!-- Окно Змейки -->
+        <div class="window" id="snake-window" style="top: 50px; left: 150px; width: 500px;">
+            <div class="window-header">
+                <div class="window-title">🐍 Змейка</div>
+                <div class="window-controls">
+                    <button class="minimize-btn" onclick="minimizeWindow('snake')">−</button>
+                    <button class="maximize-btn" onclick="maximizeWindow('snake')">□</button>
+                    <button class="close-btn" onclick="closeWindow('snake')">×</button>
+                </div>
+            </div>
+            <div class="window-content">
+                <div id="snake-game">
+                    <div class="game-info">
+                        <div>Счет: <span id="snake-score">0</span></div>
+                        <div>Рекорд: <span id="snake-highscore">0</span></div>
+                    </div>
+                    <canvas id="snake-canvas" width="400" height="400"></canvas>
+                    <div class="controls-info">
+                        <p>🎮 Управление: W A S D или стрелки</p>
+                        <button onclick="startSnakeGame()" style="margin-top: 15px; padding: 10px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 5px; cursor: pointer;">Начать игру</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Окно Дуэли -->
+        <div class="window" id="duel-window" style="top: 100px; left: 200px; width: 650px;">
+            <div class="window-header">
+                <div class="window-title">⚔️ Дуэль</div>
+                <div class="window-controls">
+                    <button class="minimize-btn" onclick="minimizeWindow('duel')">−</button>
+                    <button class="maximize-btn" onclick="maximizeWindow('duel')">□</button>
+                    <button class="close-btn" onclick="closeWindow('duel')">×</button>
+                </div>
+            </div>
+            <div class="window-content">
+                <div id="duel-game">
+                    <div class="game-info">
+                        <div>
+                            <div>Ваше HP</div>
+                            <div class="health-bar">
+                                <div class="health-fill" id="player-health" style="width: 100%;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div>Счет: <span id="duel-score">0</span></div>
+                        </div>
+                        <div>
+                            <div>HP Бота</div>
+                            <div class="health-bar">
+                                <div class="health-fill" id="bot-health" style="width: 100%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <canvas id="duel-canvas" width="600" height="400"></canvas>
+                    <div class="controls-info">
+                        <p>🎮 Движение: W A S D | Атака: КЛИК МЫШИ</p>
+                        <button onclick="startDuelGame()" style="margin-top: 15px; padding: 10px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 5px; cursor: pointer;">Начать бой</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Окно Смайликов -->
+        <div class="window" id="emoji-window" style="top: 80px; left: 180px; width: 700px; height: 500px;">
+            <div class="window-header">
+                <div class="window-title">😀 Галерея Смайликов</div>
+                <div class="window-controls">
+                    <button class="minimize-btn" onclick="minimizeWindow('emoji')">−</button>
+                    <button class="maximize-btn" onclick="maximizeWindow('emoji')">□</button>
+                    <button class="close-btn" onclick="closeWindow('emoji')">×</button>
+                </div>
+            </div>
+            <div class="window-content" id="emoji-gallery">
+                <div class="emoji-grid" id="emoji-grid"></div>
+            </div>
+        </div>
+
+        <!-- Окно Редактора -->
+        <div class="window" id="editor-window" style="top: 60px; left: 160px; width: 600px; height: 500px;">
+            <div class="window-header">
+                <div class="window-title">📝 Редактор Программ</div>
+                <div class="window-controls">
+                    <button class="minimize-btn" onclick="minimizeWindow('editor')">−</button>
+                    <button class="maximize-btn" onclick="maximizeWindow('editor')">□</button>
+                    <button class="close-btn" onclick="closeWindow('editor')">×</button>
+                </div>
+            </div>
+            <div class="window-content" id="program-editor">
+                <textarea id="program-code" placeholder="// Напишите вашу программу здесь...
+// Пример:
+console.log('Привет, мир!');
+alert('Моя первая программа!');"></textarea>
+                <div class="editor-buttons">
+                    <button onclick="runProgram()">▶ Запустить</button>
+                    <button onclick="saveProgram()">💾 Сохранить</button>
+                    <button onclick="clearProgram()">🗑 Очистить</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Окно Менеджера Приложений -->
+        <div class="window" id="manager-window" style="top: 100px; left: 200px; width: 700px; height: 500px;">
+            <div class="window-header">
+                <div class="window-title">🏪 Менеджер Приложений</div>
+                <div class="window-controls">
+                    <button class="minimize-btn" onclick="minimizeWindow('manager')">−</button>
+                    <button class="maximize-btn" onclick="maximizeWindow('manager')">□</button>
+                    <button class="close-btn" onclick="closeWindow('manager')">×</button>
+                </div>
+            </div>
+            <div class="window-content" id="app-manager">
+                <h2>Доступные приложения</h2>
+                <div class="app-grid">
+                    <div class="app-card">
+                        <div class="icon">🐍</div>
+                        <h3>Змейка</h3>
+                        <p>Классическая игра со змейкой</p>
+                        <button class="download-btn downloaded">✓ Установлено</button>
+                    </div>
+                    <div class="app-card">
+                        <div class="icon">⚔️</div>
+                        <h3>Дуэль</h3>
+                        <p>Сражение с ботами</p>
+                        <button class="download-btn downloaded">✓ Установлено</button>
+                    </div>
+                    <div class="app-card">
+                        <div class="icon">😀</div>
+                        <h3>Смайлики</h3>
+                        <p>Большая коллекция эмодзи</p>
+                        <button class="download-btn downloaded">✓ Установлено</button>
+                    </div>
+                    <div class="app-card">
+                        <div class="icon">📝</div>
+                        <h3>Редактор</h3>
+                        <p>Создавайте свои программы</p>
+                        <button class="download-btn downloaded">✓ Установлено</button>
+                    </div>
+                    <div class="app-card">
+                        <div class="icon">📚</div>
+                        <h3>Комиксы</h3>
+                        <p>Библиотека комиксов</p>
+                        <button class="download-btn downloaded">✓ Установлено</button>
+                    </div>
+                    <div class="app-card">
+                        <div class="icon">🎮</div>
+                        <h3>Пинг-Понг</h3>
+                        <p>Классическая аркадная игра</p>
+                        <button class="download-btn" onclick="downloadApp('pong', '🏓', 'Пинг-Понг')">Скачать</button>
+                    </div>
+                    <div class="app-card">
+                        <div class="icon">🧮</div>
+                        <h3>Калькулятор</h3>
+                        <p>Полнофункциональный калькулятор</p>
+                        <button class="download-btn" onclick="downloadApp('calculator', '🔢', 'Калькулятор')">Скачать</button>
+                    </div>
+                    <div class="app-card">
+                        <div class="icon">📅</div>
+                        <h3>Календарь</h3>
+                        <p>Организуйте своё время</p>
+                        <button class="download-btn" onclick="downloadApp('calendar', '📆', 'Календарь')">Скачать</button>
+                    </div>
+                    <div class="app-card">
+                        <div class="icon">🎵</div>
+                        <h3>Музыка</h3>
+                        <p>Музыкальный плеер</p>
+                        <button class="download-btn" onclick="downloadApp('music', '🎶', 'Музыка')">Скачать</button>
+                    </div>
+                    <div class="app-card">
+                        <div class="icon">🔺</div>
+                        <h3>Гемитридш</h3>
+                        <p>Geometry Dash - прыгай через препятствия!</p>
+                        <button class="download-btn" onclick="downloadApp('geometry', '🔺', 'Гемитридш')">Скачать</button>
+                    </div>
+                    <div class="app-card">
+                        <div class="icon">⭐</div>
+                        <h3>Бравл Старс</h3>
+                        <p>Brawl Stars - сражение 2 на 2!</p>
+                        <button class="download-btn" onclick="downloadApp('brawl', '⭐', 'Бравл Старс')">Скачать</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Окно Geometry Dash -->
+        <div class="window" id="geometry-window" style="top: 80px; left: 200px; width: 750px;">
+            <div class="window-header">
+                <div class="window-title">🔺 Гемитридш</div>
+                <div class="window-controls">
+                    <button class="minimize-btn" onclick="minimizeWindow('geometry')">−</button>
+                    <button class="maximize-btn" onclick="maximizeWindow('geometry')">□</button>
+                    <button class="close-btn" onclick="closeWindow('geometry')">×</button>
+                </div>
+            </div>
+            <div class="window-content">
+                <div id="geometry-game">
+                    <div class="game-info">
+                        <div>Счет: <span id="geometry-score">0</span></div>
+                        <div>Рекорд: <span id="geometry-highscore">0</span></div>
+                        <div>Попытка: <span id="geometry-attempt">1</span></div>
+                    </div>
+                    <canvas id="geometry-canvas" width="700" height="300"></canvas>
+                    <div class="controls-info">
+                        <p>🎮 Управление: ПРОБЕЛ или КЛИК для прыжка | Избегай шипов!</p>
+                        <button onclick="startGeometryGame()" style="margin-top: 15px; padding: 10px 30px; background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%); color: white; border: none; border-radius: 5px; cursor: pointer;">Начать игру</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Окно Brawl Stars -->
+        <div class="window" id="brawl-window" style="top: 100px; left: 220px; width: 800px;">
+            <div class="window-header">
+                <div class="window-title">⭐ Бравл Старс</div>
+                <div class="window-controls">
+                    <button class="minimize-btn" onclick="minimizeWindow('brawl')">−</button>
+                    <button class="maximize-btn" onclick="maximizeWindow('brawl')">□</button>
+                    <button class="close-btn" onclick="closeWindow('brawl')">×</button>
+                </div>
+            </div>
+            <div class="window-content">
+                <div id="brawl-game">
+                    <div class="game-info">
+                        <div>
+                            <div style="color: #667eea;">Игрок 1</div>
+                            <div class="brawl-health">
+                                <div class="brawl-health-fill" id="brawl-p1-health" style="width: 100%;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div>Счет: <span id="brawl-score">0</span> - <span id="brawl-bots">0</span></div>
+                        </div>
+                        <div>
+                            <div style="color: #ff6b6b;">Бот</div>
+                            <div class="brawl-health">
+                                <div class="brawl-health-fill" id="brawl-bot-health" style="width: 100%; background: linear-gradient(90deg, #ff6b6b 0%, #ee5a24 100%);"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <canvas id="brawl-canvas" width="750" height="450"></canvas>
+                    <div class="controls-info">
+                        <p>🎮 Движение: W A S D | Стрельба: КЛИК МЫШИ | Убей бота 3 раза!</p>
+                        <button onclick="startBrawlGame()" style="margin-top: 15px; padding: 10px 30px; background: linear-gradient(135deg, #ffd93d 0%, #ff6b6b 100%); color: white; border: none; border-radius: 5px; cursor: pointer;">Начать бой</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Окно Комиксов -->
+        <div class="window" id="comics-window" style="top: 70px; left: 180px; width: 750px; height: 550px;">
+            <div class="window-header">
+                <div class="window-title">📚 Комиксы</div>
+                <div class="window-controls">
+                    <button class="minimize-btn" onclick="minimizeWindow('comics')">−</button>
+                    <button class="maximize-btn" onclick="maximizeWindow('comics')">□</button>
+                    <button class="close-btn" onclick="closeWindow('comics')">×</button>
+                </div>
+            </div>
+            <div class="window-content" id="comics-gallery">
+                <h2 style="margin-bottom: 20px;">Библиотека комиксов</h2>
+                <div class="comics-grid" id="comics-grid"></div>
+            </div>
+        </div>
+
+        <!-- Просмотрщик комиксов -->
+        <div class="comic-viewer" id="comic-viewer">
+            <button class="comic-close" onclick="closeComicViewer()">✕ Закрыть</button>
+            <div class="comic-page" id="comic-page">
+                <h2 id="comic-title" style="margin-bottom: 20px; color: #333;"></h2>
+                <div id="comic-content" style="font-size: 18px; line-height: 1.6; color: #666;"></div>
+            </div>
+            <div class="comic-nav">
+                <button onclick="prevComicPage()">◀ Предыдущая</button>
+                <span id="comic-page-num" style="color: white; font-size: 18px; padding: 15px;">Страница 1</span>
+                <button onclick="nextComicPage()">Следующая ▶</button>
+            </div>
+        </div>
+
+        <!-- Окно Чата -->
+        <div class="window" id="chat-window" style="top: 80px; left: 200px; width: 500px; height: 600px;">
+            <div class="window-header">
+                <div class="window-title">💬 Чат с Роботом</div>
+                <div class="window-controls">
+                    <button class="minimize-btn" onclick="minimizeWindow('chat')">−</button>
+                    <button class="maximize-btn" onclick="maximizeWindow('chat')">□</button>
+                    <button class="close-btn" onclick="closeWindow('chat')">×</button>
+                </div>
+            </div>
+            <div class="window-content" id="chat-app">
+                <div id="chat-messages"></div>
+                <div id="chat-input-area">
+                    <input type="text" id="chat-input" placeholder="Напишите сообщение..." onkeypress="if(event.key==='Enter')sendMessage()">
+                    <button id="chat-send" onclick="sendMessage()">➤</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Окно Сообщений (Telegram-style) -->
+        <div class="window" id="messages-window" style="top: 100px; left: 250px; width: 900px; height: 650px;">
+            <div class="window-header">
+                <div class="window-title">✉️ Сообщения</div>
+                <div class="window-controls">
+                    <button class="minimize-btn" onclick="minimizeWindow('messages')">−</button>
+                    <button class="maximize-btn" onclick="maximizeWindow('messages')">□</button>
+                    <button class="close-btn" onclick="closeWindow('messages')">×</button>
+                </div>
+            </div>
+            <div class="window-content" id="messages-app" style="padding: 0;">
+                <div style="display: flex; height: 100%;">
+                    <div class="chats-list" id="chats-list"></div>
+                    <div class="chat-view" id="chat-view">
+                        <div class="no-chat-selected">
+                            <div class="icon">💬</div>
+                            <p>Выберите чат чтобы начать общение</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Маскот -->
+        <div class="mascot-container" id="mascot-container" onclick="toggleMascotChat()">
+            <div class="mascot" id="mascot">🤖</div>
+            <div class="mascot-bubble">💬 Нажми чтобы пообщаться!</div>
+        </div>
+    </div>
+
+    <!-- Панель задач -->
+    <div id="taskbar">
+        <button id="start-button" onclick="toggleStartMenu()">▪ Пуск</button>
+        <div id="taskbar-apps"></div>
+        <div id="clock">00:00</div>
+        <button id="power-button" onclick="togglePowerMenu()">⏻</button>
+    </div>
+
+    <!-- Меню питания -->
+    <div id="power-menu">
+        <button class="power-menu-item" onclick="sleepMode()">
+            <span class="icon">😴</span>
+            <span>Спящий режим</span>
+        </button>
+        <button class="power-menu-item" onclick="lockScreen()">
+            <span class="icon">🔒</span>
+            <span>Заблокировать</span>
+        </button>
+        <button class="power-menu-item" onclick="restartSystem()">
+            <span class="icon">🔄</span>
+            <span>Перезагрузка</span>
+        </button>
+        <button class="power-menu-item" onclick="shutDown()">
+            <span class="icon">⏻</span>
+            <span>Выключить</span>
+        </button>
+    </div>
+
+    <!-- Меню Пуск -->
+    <div id="start-menu">
+        <h2>🖥️ Web OS</h2>
+        <div class="menu-section">
+            <h3>Приложения</h3>
+            <div class="menu-item" onclick="openApp('snake'); toggleStartMenu();">
+                <span class="icon">🐍</span>
+                <span>Змейка</span>
+            </div>
+            <div class="menu-item" onclick="openApp('duel'); toggleStartMenu();">
+                <span class="icon">⚔️</span>
+                <span>Дуэль</span>
+            </div>
+            <div class="menu-item" onclick="openApp('emoji'); toggleStartMenu();">
+                <span class="icon">😀</span>
+                <span>Смайлики</span>
+            </div>
+            <div class="menu-item" onclick="openApp('editor'); toggleStartMenu();">
+                <span class="icon">📝</span>
+                <span>Редактор программ</span>
+            </div>
+        </div>
+        <div class="menu-section">
+            <h3>Система</h3>
+            <div class="menu-item" onclick="openApp('manager'); toggleStartMenu();">
+                <span class="icon">🏪</span>
+                <span>Менеджер приложений</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Глобальные переменные
+        let openWindows = [];
+        let dragOffset = { x: 0, y: 0 };
+        let isDragging = false;
+        let currentWindow = null;
+        let isMobileMode = false;
+        let deviceSelected = false;
+        let isFirstRun = true;
+
+        // Проверка первого запуска
+        if (localStorage.getItem('webOS_initialized')) {
+            // Был запущен ранее
+            isFirstRun = false;
+            document.getElementById('mascot-welcome').style.display = 'none';
+            if (localStorage.getItem('deviceType') === 'mobile') {
+                isMobileMode = true;
+                document.body.classList.add('mobile-mode');
+            }
+            deviceSelected = true;
+            startBoot();
+        } else {
+            // Первый запуск - показываем маскота
+            document.getElementById('mascot-welcome').style.display = 'flex';
+        }
+
+        function startFromWelcome() {
+            // Анимация исчезновения
+            const welcome = document.getElementById('mascot-welcome');
+            welcome.style.animation = 'fadeOut 0.5s forwards';
+
+            setTimeout(() => {
+                welcome.style.display = 'none';
+                // Сохраняем что система инициализирована
+                localStorage.setItem('webOS_initialized', 'true');
+                localStorage.setItem('deviceType', 'pc');
+                deviceSelected = true;
+                startBoot();
+            }, 500);
+        }
+
+        function startBoot() {
+            updateBootScreen();
+        }
+
+        // Загрузка системы
+        let bootProgress = 0;
+        let bootTime = 20;
+
+        const bootMessages = [
+            { progress: 5, message: 'Загрузка ядра...' },
+            { progress: 10, message: 'Инициализация оборудования...' },
+            { progress: 15, message: 'Загрузка драйверов...' },
+            { progress: 25, message: 'Проверка памяти...' },
+            { progress: 35, message: 'Загрузка системных служб...' },
+            { progress: 45, message: 'Монтирование файловой системы...' },
+            { progress: 55, message: 'Загрузка пользовательского интерфейса...' },
+            { progress: 65, message: 'Настройка сети...' },
+            { progress: 75, message: 'Загрузка приложений...' },
+            { progress: 85, message: 'Подготовка рабочего стола...' },
+            { progress: 95, message: 'Завершение загрузки...' }
+        ];
+
+        function updateBootScreen() {
+            const progress = document.getElementById('loading-progress');
+            const timer = document.getElementById('boot-timer');
+            const status = document.getElementById('boot-status');
+
+            progress.style.width = bootProgress + '%';
+            timer.textContent = `Осталось: ${bootTime} секунд`;
+
+            // Обновить статус
+            const currentStatus = bootMessages.find(msg => bootProgress >= msg.progress && bootProgress < msg.progress + 10);
+            if (currentStatus) {
+                status.textContent = currentStatus.message;
+            }
+
+            if (bootProgress < 100) {
+                bootProgress += 5;
+                bootTime = Math.max(0, 20 - Math.floor(bootProgress / 5));
+                setTimeout(updateBootScreen, 200);
+            } else {
+                status.textContent = 'Готово!';
+                setTimeout(() => {
+                    document.getElementById('boot-screen').style.display = 'none';
+                    document.getElementById('desktop').style.display = 'block';
+                    document.getElementById('desktop').classList.add('fade-in');
+                    initializeOS();
+                }, 500);
+            }
+        }
+
+        function initializeOS() {
+            updateClock();
+            setInterval(updateClock, 1000);
+            loadEmojiGallery();
+            loadComicsGallery();
+            updateLockScreenTime();
+            setInterval(updateLockScreenTime, 1000);
+            initChat();
+            showNotification('🎉 Добро пожаловать в Web OS!');
+
+            // Инициализация приложений при открытии
+            setTimeout(() => {
+                initMessagesApp();
+            }, 500);
+
+            // Закрыть меню питания при клике вне его
+            document.addEventListener('click', (e) => {
+                const powerMenu = document.getElementById('power-menu');
+                const powerBtn = document.getElementById('power-button');
+                if (!powerMenu.contains(e.target) && !powerBtn.contains(e.target)) {
+                    powerMenu.classList.remove('active');
+                }
+            });
+        }
+
+        function updateLockScreenTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+            const months = ['Января', 'Февраля', 'Марта', 'Апреля', 'Мая', 'Июня', 'Июля', 'Августа', 'Сентября', 'Октября', 'Ноября', 'Декабря'];
+
+            const timeDisplay = document.getElementById('lock-time-display');
+            const dateDisplay = document.getElementById('lock-date-display');
+
+            if (timeDisplay) timeDisplay.textContent = `${hours}:${minutes}`;
+            if (dateDisplay) dateDisplay.textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
+        }
+
+        function togglePowerMenu() {
+            const menu = document.getElementById('power-menu');
+            menu.classList.toggle('active');
+        }
+
+        function shutDown() {
+            document.getElementById('power-menu').classList.remove('active');
+
+            if (confirm('Вы уверены, что хотите выключить систему?')) {
+                // Анимация выключения
+                document.getElementById('desktop').classList.add('fade-out');
+                document.getElementById('taskbar').classList.add('fade-out');
+
+                setTimeout(() => {
+                    // Показать экран выключения
+                    document.getElementById('shutdown-screen').classList.add('active');
+                    document.getElementById('desktop').style.display = 'none';
+                    document.getElementById('taskbar').style.display = 'none';
+                    document.querySelectorAll('.window').forEach(w => w.style.display = 'none');
+                }, 500);
+            }
+        }
+
+        function turnOn() {
+            // Скрыть экран выключения
+            document.getElementById('shutdown-screen').classList.remove('active');
+
+            // Показать загрузочный экран
+            document.getElementById('boot-screen').style.display = 'flex';
+            document.getElementById('boot-screen').classList.add('fade-in');
+
+            // Перезапустить загрузку
+            bootProgress = 0;
+            bootTime = 20;
+            updateBootScreen();
+        }
+
+        function restartSystem() {
+            document.getElementById('power-menu').classList.remove('active');
+
+            if (confirm('Перезагрузить систему?')) {
+                document.getElementById('desktop').classList.add('fade-out');
+                document.getElementById('taskbar').classList.add('fade-out');
+
+                setTimeout(() => {
+                    location.reload();
+                }, 500);
+            }
+        }
+
+        function sleepMode() {
+            document.getElementById('power-menu').classList.remove('active');
+
+            // Затемнить экран
+            document.body.style.transition = 'filter 0.5s ease';
+            document.body.style.filter = 'brightness(0)';
+
+            setTimeout(() => {
+                showNotification('💤 Спящий режим - нажмите чтобы проснуться');
+
+                // Просыпается при любом нажатии
+                const wakeUp = () => {
+                    document.body.style.filter = 'brightness(1)';
+                    showNotification('☀️ Пробуждение...');
+                    document.removeEventListener('click', wakeUp);
+                    document.removeEventListener('keydown', wakeUp);
+                };
+
+                setTimeout(() => {
+                    document.addEventListener('click', wakeUp);
+                    document.addEventListener('keydown', wakeUp);
+                }, 1000);
+            }, 500);
+        }
+
+        function lockScreen() {
+            document.getElementById('power-menu').classList.remove('active');
+            updateLockScreenTime();
+            document.getElementById('lock-screen').classList.add('active');
+        }
+
+        function unlockScreen() {
+            document.getElementById('lock-screen').classList.remove('active');
+            showNotification('🔓 Система разблокирована');
+        }
+
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('clock').textContent = `${hours}:${minutes}`;
+        }
+
+        // Управление окнами
+        function openApp(appName) {
+            const windowEl = document.getElementById(appName + '-window');
+            if (windowEl) {
+                windowEl.style.display = 'flex';
+                if (!openWindows.includes(appName)) {
+                    openWindows.push(appName);
+                    updateTaskbar();
+                }
+                bringToFront(windowEl);
+
+                // Инициализация при открытии
+                if (appName === 'messages') {
+                    setTimeout(() => initMessagesApp(), 100);
+                }
+            }
+        }
+
+        function closeWindow(appName) {
+            const windowEl = document.getElementById(appName + '-window');
+            if (windowEl) {
+                windowEl.style.display = 'none';
+                openWindows = openWindows.filter(w => w !== appName);
+                updateTaskbar();
+            }
+        }
+
+        function minimizeWindow(appName) {
+            const windowEl = document.getElementById(appName + '-window');
+            if (windowEl) {
+                windowEl.style.display = 'none';
+            }
+        }
+
+        function maximizeWindow(appName) {
+            const windowEl = document.getElementById(appName + '-window');
+            if (windowEl) {
+                if (windowEl.dataset.maximized === 'true') {
+                    windowEl.style.top = windowEl.dataset.originalTop;
+                    windowEl.style.left = windowEl.dataset.originalLeft;
+                    windowEl.style.width = windowEl.dataset.originalWidth;
+                    windowEl.style.height = '';
+                    windowEl.dataset.maximized = 'false';
+                } else {
+                    windowEl.dataset.originalTop = windowEl.style.top;
+                    windowEl.dataset.originalLeft = windowEl.style.left;
+                    windowEl.dataset.originalWidth = windowEl.style.width;
+                    windowEl.style.top = '0';
+                    windowEl.style.left = '0';
+                    windowEl.style.width = '100%';
+                    windowEl.style.height = 'calc(100vh - 50px)';
+                    windowEl.dataset.maximized = 'true';
+                }
+            }
+        }
+
+        function bringToFront(windowEl) {
+            document.querySelectorAll('.window').forEach(w => w.style.zIndex = 100);
+            windowEl.style.zIndex = 200;
+        }
+
+        function updateTaskbar() {
+            const taskbarApps = document.getElementById('taskbar-apps');
+            taskbarApps.innerHTML = '';
+            openWindows.forEach(app => {
+                const btn = document.createElement('button');
+                btn.className = 'taskbar-app';
+                btn.textContent = getAppName(app);
+                btn.onclick = () => openApp(app);
+                taskbarApps.appendChild(btn);
+            });
+        }
+
+        function getAppName(app) {
+            const names = {
+                'snake': '🐍 Змейка',
+                'duel': '⚔️ Дуэль',
+                'emoji': '😀 Смайлики',
+                'editor': '📝 Редактор',
+                'manager': '🏪 Менеджер',
+                'geometry': '🔺 Гемитридш',
+                'brawl': '⭐ Бравл Старс',
+                'pong': '🏓 Пинг-Понг',
+                'calculator': '🔢 Калькулятор',
+                'calendar': '📆 Календарь',
+                'music': '🎶 Музыка',
+                'comics': '📚 Комиксы',
+                'chat': '💬 Чат',
+                'messages': '✉️ Сообщения'
+            };
+            return names[app] || app;
+        }
+
+        // Проверяем и обновляем состояние кнопки при открытии менеджера
+        function updateManagerButtons() {
+            const buttons = document.querySelectorAll('.download-btn');
+            buttons.forEach(btn => {
+                const onclickStr = btn.getAttribute('onclick');
+                if (onclickStr) {
+                    const match = onclickStr.match(/downloadApp\('([^']+)',\s*'([^']*)',\s*'([^']*)'\)/);
+                    if (match) {
+                        const app = match[1];
+                        if (installedApps.includes(app)) {
+                            btn.textContent = '✓ Установлено';
+                            btn.classList.add('downloaded');
+                            btn.disabled = true;
+                        }
+                    }
+                }
+            });
+        }
+
+        // Обновляем openApp чтобы инициализировать менеджер при открытии
+        const originalOpenApp = openApp;
+        openApp = function(appName) {
+            originalOpenApp(appName);
+            if (appName === 'manager') {
+                setTimeout(updateManagerButtons, 100);
+            }
+        };
+
+        // Меню Пуск
+        function toggleStartMenu() {
+            const menu = document.getElementById('start-menu');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Закрытие меню Пуск при клике вне его
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('start-menu');
+            const startBtn = document.getElementById('start-button');
+            if (!menu.contains(e.target) && !startBtn.contains(e.target)) {
+                menu.style.display = 'none';
+            }
+        });
+
+        // Перетаскивание окон
+        document.querySelectorAll('.window-header').forEach(header => {
+            header.addEventListener('mousedown', (e) => {
+                if (e.target.tagName === 'BUTTON') return;
+                isDragging = true;
+                currentWindow = header.parentElement;
+                bringToFront(currentWindow);
+                const rect = currentWindow.getBoundingClientRect();
+                dragOffset.x = e.clientX - rect.left;
+                dragOffset.y = e.clientY - rect.top;
+            });
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging && currentWindow) {
+                currentWindow.style.left = (e.clientX - dragOffset.x) + 'px';
+                currentWindow.style.top = (e.clientY - dragOffset.y) + 'px';
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            currentWindow = null;
+        });
+
+        // ============================================
+        // ИГРА ЗМЕЙКА
+        // ============================================
+        let snakeCanvas, snakeCtx;
+        let snake = [];
+        let food = {};
+        let direction = 'right';
+        let snakeGameLoop;
+        let snakeScore = 0;
+        let snakeHighscore = localStorage.getItem('snakeHighscore') || 0;
+
+        function startSnakeGame() {
+            snakeCanvas = document.getElementById('snake-canvas');
+            snakeCtx = snakeCanvas.getContext('2d');
+
+            snake = [
+                { x: 5, y: 10 },
+                { x: 4, y: 10 },
+                { x: 3, y: 10 }
+            ];
+            direction = 'right';
+            snakeScore = 0;
+            document.getElementById('snake-score').textContent = snakeScore;
+            document.getElementById('snake-highscore').textContent = snakeHighscore;
+
+            spawnFood();
+            if (snakeGameLoop) clearInterval(snakeGameLoop);
+            snakeGameLoop = setInterval(updateSnake, 100);
+
+            document.addEventListener('keydown', handleSnakeInput);
+        }
+
+        function spawnFood() {
+            const gridSize = 20;
+            food = {
+                x: Math.floor(Math.random() * (snakeCanvas.width / gridSize)),
+                y: Math.floor(Math.random() * (snakeCanvas.height / gridSize))
+            };
+        }
+
+        function handleSnakeInput(e) {
+            const key = e.key.toLowerCase();
+            if ((key === 'w' || key === 'arrowup') && direction !== 'down') direction = 'up';
+            if ((key === 's' || key === 'arrowdown') && direction !== 'up') direction = 'down';
+            if ((key === 'a' || key === 'arrowleft') && direction !== 'right') direction = 'left';
+            if ((key === 'd' || key === 'arrowright') && direction !== 'left') direction = 'right';
+        }
+
+        function updateSnake() {
+            const gridSize = 20;
+            const head = { ...snake[0] };
+
+            if (direction === 'up') head.y--;
+            if (direction === 'down') head.y++;
+            if (direction === 'left') head.x--;
+            if (direction === 'right') head.x++;
+
+            // Проверка столкновения со стеной
+            if (head.x < 0 || head.x >= snakeCanvas.width / gridSize ||
+                head.y < 0 || head.y >= snakeCanvas.height / gridSize ||
+                snake.some(s => s.x === head.x && s.y === head.y)) {
+                clearInterval(snakeGameLoop);
+                if (snakeScore > snakeHighscore) {
+                    snakeHighscore = snakeScore;
+                    localStorage.setItem('snakeHighscore', snakeHighscore);
+                    showNotification('🏆 Новый рекорд: ' + snakeScore);
+                } else {
+                    showNotification('💀 Игра окончена! Счет: ' + snakeScore);
+                }
+                return;
+            }
+
+            snake.unshift(head);
+
+            // Проверка еды
+            if (head.x === food.x && head.y === food.y) {
+                snakeScore += 10;
+                document.getElementById('snake-score').textContent = snakeScore;
+                spawnFood();
+            } else {
+                snake.pop();
+            }
+
+            drawSnake();
+        }
+
+        function drawSnake() {
+            const gridSize = 20;
+            snakeCtx.fillStyle = '#1a1a2e';
+            snakeCtx.fillRect(0, 0, snakeCanvas.width, snakeCanvas.height);
+
+            // Еда
+            snakeCtx.fillStyle = '#ff5f57';
+            snakeCtx.beginPath();
+            snakeCtx.arc(food.x * gridSize + gridSize/2, food.y * gridSize + gridSize/2, gridSize/2 - 2, 0, Math.PI * 2);
+            snakeCtx.fill();
+
+            // Змейка
+            snake.forEach((segment, index) => {
+                const gradient = snakeCtx.createLinearGradient(
+                    segment.x * gridSize, segment.y * gridSize,
+                    (segment.x + 1) * gridSize, (segment.y + 1) * gridSize
+                );
+                if (index === 0) {
+                    gradient.addColorStop(0, '#667eea');
+                    gradient.addColorStop(1, '#764ba2');
+                } else {
+                    gradient.addColorStop(0, '#00d2ff');
+                    gradient.addColorStop(1, '#3a7bd5');
+                }
+                snakeCtx.fillStyle = gradient;
+                snakeCtx.fillRect(segment.x * gridSize + 1, segment.y * gridSize + 1, gridSize - 2, gridSize - 2);
+            });
+        }
+
+        // ============================================
+        // ИГРА ДУЭЛЬ
+        // ============================================
+        let duelCanvas, duelCtx;
+        let player = { x: 100, y: 200, width: 40, height: 60, health: 10, maxHealth: 10 };
+        let bot = { x: 460, y: 200, width: 40, height: 60, health: 10, maxHealth: 10 };
+        let duelKeys = {};
+        let duelGameLoop;
+        let duelScore = 0;
+        let playerAttacking = false;
+        let attackCooldown = 0;
+
+        function startDuelGame() {
+            duelCanvas = document.getElementById('duel-canvas');
+            duelCtx = duelCanvas.getContext('2d');
+
+            player = { x: 100, y: 200, width: 40, height: 60, health: 10, maxHealth: 10 };
+            bot = { x: 460, y: 200, width: 40, height: 60, health: 10, maxHealth: 10 };
+            duelScore = 0;
+            document.getElementById('duel-score').textContent = duelScore;
+            updateHealthBars();
+
+            if (duelGameLoop) cancelAnimationFrame(duelGameLoop);
+            document.addEventListener('keydown', (e) => duelKeys[e.key.toLowerCase()] = true);
+            document.addEventListener('keyup', (e) => duelKeys[e.key.toLowerCase()] = false);
+            duelCanvas.addEventListener('click', playerAttack);
+
+            updateDuel();
+        }
+
+        function playerAttack(e) {
+            if (attackCooldown > 0 || playerAttacking) return;
+
+            playerAttacking = true;
+            attackCooldown = 30;
+
+            // Проверка попадания
+            const dx = bot.x - player.x;
+            const dy = bot.y - player.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < 80) {
+                bot.health--;
+                showDamage(bot.x, bot.y);
+                updateHealthBars();
+
+                if (bot.health <= 0) {
+                    duelScore++;
+                    document.getElementById('duel-score').textContent = duelScore;
+                    showNotification('🎯 Бот побежден! +1 очко');
+                    respawnBot();
+                }
+            }
+
+            setTimeout(() => playerAttacking = false, 200);
+        }
+
+        function respawnBot() {
+            bot.health = bot.maxHealth;
+            bot.x = 400 + Math.random() * 150;
+            bot.y = 100 + Math.random() * 200;
+            updateHealthBars();
+        }
+
+        function botAttack() {
+            const dx = player.x - bot.x;
+            const dy = player.y - bot.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < 60 && Math.random() < 0.02) {
+                player.health--;
+                showDamage(player.x, player.y);
+                updateHealthBars();
+
+                if (player.health <= 0) {
+                    showNotification('💀 Вас победили! Очков: ' + duelScore);
+                    player.health = player.maxHealth;
+                    duelScore = 0;
+                    document.getElementById('duel-score').textContent = duelScore;
+                    updateHealthBars();
+                }
+            }
+        }
+
+        function showDamage(x, y) {
+            // Визуальный эффект попадания
+            duelCtx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+            duelCtx.beginPath();
+            duelCtx.arc(x + 20, y + 30, 30, 0, Math.PI * 2);
+            duelCtx.fill();
+        }
+
+        function updateHealthBars() {
+            document.getElementById('player-health').style.width = (player.health / player.maxHealth * 100) + '%';
+            document.getElementById('bot-health').style.width = (bot.health / bot.maxHealth * 100) + '%';
+        }
+
+        function updateDuel() {
+            const speed = 4;
+
+            // Движение игрока
+            if (duelKeys['w']) player.y = Math.max(0, player.y - speed);
+            if (duelKeys['s']) player.y = Math.min(duelCanvas.height - player.height, player.y + speed);
+            if (duelKeys['a']) player.x = Math.max(0, player.x - speed);
+            if (duelKeys['d']) player.x = Math.min(duelCanvas.width - player.width, player.x + speed);
+
+            // ИИ бота
+            const dx = player.x - bot.x;
+            const dy = player.y - bot.y;
+            const botSpeed = 2;
+
+            if (Math.abs(dx) > 50) {
+                if (dx > 0) bot.x += botSpeed;
+                else bot.x -= botSpeed;
+            }
+            if (Math.abs(dy) > 10) {
+                if (dy > 0) bot.y += botSpeed;
+                else bot.y -= botSpeed;
+            }
+
+            botAttack();
+
+            if (attackCooldown > 0) attackCooldown--;
+
+            drawDuel();
+            duelGameLoop = requestAnimationFrame(updateDuel);
+        }
+
+        function drawDuel() {
+            // Фон
+            const gradient = duelCtx.createLinearGradient(0, 0, 0, duelCanvas.height);
+            gradient.addColorStop(0, '#2d1b4e');
+            gradient.addColorStop(1, '#1a1a2e');
+            duelCtx.fillStyle = gradient;
+            duelCtx.fillRect(0, 0, duelCanvas.width, duelCanvas.height);
+
+            // Игрок
+            const playerGradient = duelCtx.createLinearGradient(player.x, player.y, player.x + player.width, player.y + player.height);
+            playerGradient.addColorStop(0, '#667eea');
+            playerGradient.addColorStop(1, '#764ba2');
+            duelCtx.fillStyle = playerGradient;
+            duelCtx.fillRect(player.x, player.y, player.width, player.height);
+
+            // Эффект атаки игрока
+            if (playerAttacking) {
+                duelCtx.strokeStyle = '#ff5f57';
+                duelCtx.lineWidth = 3;
+                duelCtx.beginPath();
+                duelCtx.arc(player.x + player.width/2, player.y + player.height/2, 50, 0, Math.PI * 2);
+                duelCtx.stroke();
+            }
+
+            // Бот
+            const botGradient = duelCtx.createLinearGradient(bot.x, bot.y, bot.x + bot.width, bot.y + bot.height);
+            botGradient.addColorStop(0, '#ff5f57');
+            botGradient.addColorStop(1, '#ffbd2e');
+            duelCtx.fillStyle = botGradient;
+            duelCtx.fillRect(bot.x, bot.y, bot.width, bot.height);
+        }
+
+        // ============================================
+        // ГАЛЕРЕЯ СМАЙЛИКОВ
+        // ============================================
+        function loadEmojiGallery() {
+            const grid = document.getElementById('emoji-grid');
+            const emojis = [
+                '😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂',
+                '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩',
+                '😘', '😗', '😚', '😙', '😋', '😛', '😜', '🤪',
+                '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨',
+                '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥',
+                '😌', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕',
+                '🤢', '🤮', '🤧', '🥵', '🥶', '😶‍🌫️', '🥴', '😵',
+                '🤯', '🤠', '🥳', '😎', '🤓', '🧐', '😕', '😟',
+                '🙁', '😮', '😯', '😲', '😳', '🥺', '😦', '😧',
+                '😨', '😰', '😥', '😢', '😭', '😱', '😖', '😣',
+                '😞', '😓', '😩', '😫', '🥱', '😤', '😡', '😠',
+                '🤬', '👍', '👎', '👊', '✊', '🤛', '🤜', '🤞',
+                '👋', '🤚', '🖐️', '✋', '🖖', '👏', '🙌', '👐',
+                '🤲', '🤝', '🙏', '✍️', '💪', '🦾', '🦿', '🦵',
+                '🦶', '👂', '🦻', '👃', '🧠', '🫀', '🫁', '🦷',
+                '🦴', '👀', '👁️', '👅', '👄', '👶', '🧒', '👦'
+            ];
+
+            emojis.forEach(emoji => {
+                const item = document.createElement('div');
+                item.className = 'emoji-item';
+                item.textContent = emoji;
+                item.onclick = () => {
+                    navigator.clipboard.writeText(emoji);
+                    showNotification('📋 Скопировано: ' + emoji);
+                };
+                grid.appendChild(item);
+            });
+        }
+
+        // ============================================
+        // РЕДАКТОР ПРОГРАММ
+        // ============================================
+        function runProgram() {
+            const code = document.getElementById('program-code').value;
+            try {
+                eval(code);
+                showNotification('✅ Программа выполнена!');
+            } catch (error) {
+                showNotification('❌ Ошибка: ' + error.message);
+            }
+        }
+
+        function saveProgram() {
+            const code = document.getElementById('program-code').value;
+            localStorage.setItem('savedProgram', code);
+            showNotification('💾 Программа сохранена!');
+        }
+
+        function clearProgram() {
+            document.getElementById('program-code').value = '';
+        }
+
+        // ============================================
+        // ИГРА GEOMETRY DASH
+        // ============================================
+        let geoCanvas, geoCtx;
+        let geoPlayer = { x: 50, y: 200, width: 40, height: 40, velocityY: 0, onGround: false };
+        let geoObstacles = [];
+        let geoGameLoop;
+        let geoScore = 0;
+        let geoHighscore = localStorage.getItem('geoHighscore') || 0;
+        let geoAttempt = 1;
+        let geoGameSpeed = 5;
+        const gravity = 0.6;
+        const jumpForce = -12;
+
+        function startGeometryGame() {
+            geoCanvas = document.getElementById('geometry-canvas');
+            geoCtx = geoCanvas.getContext('2d');
+
+            geoPlayer = { x: 50, y: 200, width: 40, height: 40, velocityY: 0, onGround: false };
+            geoObstacles = [];
+            geoScore = 0;
+            geoGameSpeed = 5;
+            document.getElementById('geometry-score').textContent = geoScore;
+            document.getElementById('geometry-highscore').textContent = geoHighscore;
+            document.getElementById('geometry-attempt').textContent = geoAttempt;
+
+            if (geoGameLoop) cancelAnimationFrame(geoGameLoop);
+
+            // Обработчики прыжка
+            const jumpHandler = (e) => {
+                if ((e.code === 'Space' || e.type === 'click') && geoPlayer.onGround) {
+                    geoPlayer.velocityY = jumpForce;
+                    geoPlayer.onGround = false;
+                    e.preventDefault();
+                }
+            };
+
+            document.addEventListener('keydown', jumpHandler);
+            geoCanvas.addEventListener('click', jumpHandler);
+
+            updateGeometry();
+        }
+
+        function updateGeometry() {
+            // Гравитация
+            geoPlayer.velocityY += gravity;
+            geoPlayer.y += geoPlayer.velocityY;
+
+            // Земля
+            if (geoPlayer.y >= 220) {
+                geoPlayer.y = 220;
+                geoPlayer.velocityY = 0;
+                geoPlayer.onGround = true;
+            }
+
+            // Генерация препятствий
+            if (Math.random() < 0.02) {
+                const type = Math.random() > 0.5 ? 'spike' : 'block';
+                geoObstacles.push({
+                    x: geoCanvas.width,
+                    y: type === 'spike' ? 230 : 200,
+                    width: 30,
+                    height: type === 'spike' ? 40 : 60,
+                    type: type
+                });
+            }
+
+            // Обновление препятствий
+            geoObstacles.forEach((obs, index) => {
+                obs.x -= geoGameSpeed;
+
+                // Проверка столкновения
+                if (geoPlayer.x < obs.x + obs.width &&
+                    geoPlayer.x + geoPlayer.width > obs.x &&
+                    geoPlayer.y < obs.y + obs.height &&
+                    geoPlayer.y + geoPlayer.height > obs.y) {
+
+                    // Столкновение!
+                    cancelAnimationFrame(geoGameLoop);
+                    geoAttempt++;
+                    showNotification('💥 Столкновение! Попытка ' + geoAttempt);
+
+                    if (geoScore > geoHighscore) {
+                        geoHighscore = geoScore;
+                        localStorage.setItem('geoHighscore', geoHighscore);
+                        showNotification('🏆 Новый рекорд: ' + geoScore);
+                    }
+
+                    return;
+                }
+
+                // Очки за прохождение
+                if (obs.x + obs.width < geoPlayer.x && !obs.passed) {
+                    obs.passed = true;
+                    geoScore += 10;
+                    document.getElementById('geometry-score').textContent = geoScore;
+                }
+            });
+
+            // Удаление препятствий за экраном
+            geoObstacles = geoObstacles.filter(obs => obs.x > -50);
+
+            // Увеличение скорости
+            if (geoScore > 0 && geoScore % 100 === 0) {
+                geoGameSpeed = Math.min(10, 5 + geoScore / 200);
+            }
+
+            drawGeometry();
+            geoGameLoop = requestAnimationFrame(updateGeometry);
+        }
+
+        function drawGeometry() {
+            // Фон
+            const gradient = geoCtx.createLinearGradient(0, 0, 0, geoCanvas.height);
+            gradient.addColorStop(0, '#1a1a2e');
+            gradient.addColorStop(1, '#16213e');
+            geoCtx.fillStyle = gradient;
+            geoCtx.fillRect(0, 0, geoCanvas.width, geoCanvas.height);
+
+            // Земля
+            geoCtx.fillStyle = '#0f3460';
+            geoCtx.fillRect(0, 260, geoCanvas.width, 40);
+
+            // Игрок (куб)
+            const playerGradient = geoCtx.createLinearGradient(geoPlayer.x, geoPlayer.y, geoPlayer.x + geoPlayer.width, geoPlayer.y + geoPlayer.height);
+            playerGradient.addColorStop(0, '#ff6b6b');
+            playerGradient.addColorStop(1, '#feca57');
+            geoCtx.fillStyle = playerGradient;
+            geoCtx.fillRect(geoPlayer.x, geoPlayer.y, geoPlayer.width, geoPlayer.height);
+
+            // Препятствия
+            geoObstacles.forEach(obs => {
+                if (obs.type === 'spike') {
+                    // Шип (треугольник)
+                    geoCtx.fillStyle = '#e74c3c';
+                    geoCtx.beginPath();
+                    geoCtx.moveTo(obs.x, obs.y + obs.height);
+                    geoCtx.lineTo(obs.x + obs.width / 2, obs.y);
+                    geoCtx.lineTo(obs.x + obs.width, obs.y + obs.height);
+                    geoCtx.closePath();
+                    geoCtx.fill();
+                } else {
+                    // Блок
+                    geoCtx.fillStyle = '#95a5a6';
+                    geoCtx.fillRect(obs.x, obs.y, obs.width, obs.height);
+                }
+            });
+        }
+
+        // ============================================
+        // ИГРА BRAWL STARS
+        // ============================================
+        let brawlCanvas, brawlCtx;
+        let brawlPlayer = { x: 100, y: 200, width: 35, height: 35, health: 5, maxHealth: 5 };
+        let brawlBot = { x: 600, y: 200, width: 35, height: 35, health: 5, maxHealth: 5 };
+        let brawlBullets = [];
+        let brawlBotBullets = [];
+        let brawlKeys = {};
+        let brawlGameLoop;
+        let brawlPlayerScore = 0;
+        let brawlBotScore = 0;
+        let brawlShootCooldown = 0;
+        let brawlBotShootCooldown = 0;
+
+        function startBrawlGame() {
+            brawlCanvas = document.getElementById('brawl-canvas');
+            brawlCtx = brawlCanvas.getContext('2d');
+
+            brawlPlayer = { x: 100, y: 200, width: 35, height: 35, health: 5, maxHealth: 5 };
+            brawlBot = { x: 600, y: 200, width: 35, height: 35, health: 5, maxHealth: 5 };
+            brawlBullets = [];
+            brawlBotBullets = [];
+            brawlPlayerScore = 0;
+            brawlBotScore = 0;
+            document.getElementById('brawl-score').textContent = brawlPlayerScore;
+            document.getElementById('brawl-bots').textContent = brawlBotScore;
+            updateBrawlHealthBars();
+
+            if (brawlGameLoop) cancelAnimationFrame(brawlGameLoop);
+
+            document.addEventListener('keydown', (e) => brawlKeys[e.key.toLowerCase()] = true);
+            document.addEventListener('keyup', (e) => brawlKeys[e.key.toLowerCase()] = false);
+            brawlCanvas.addEventListener('click', brawlShoot);
+
+            updateBrawl();
+        }
+
+        function brawlShoot(e) {
+            if (brawlShootCooldown > 0) return;
+
+            const rect = brawlCanvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            const angle = Math.atan2(mouseY - (brawlPlayer.y + brawlPlayer.height/2),
+                                    mouseX - (brawlPlayer.x + brawlPlayer.width/2));
+
+            brawlBullets.push({
+                x: brawlPlayer.x + brawlPlayer.width/2,
+                y: brawlPlayer.y + brawlPlayer.height/2,
+                vx: Math.cos(angle) * 10,
+                vy: Math.sin(angle) * 10,
+                radius: 6
+            });
+
+            brawlShootCooldown = 15;
+        }
+
+        function botShoot() {
+            if (brawlBotShootCooldown > 0) return;
+
+            const angle = Math.atan2(brawlPlayer.y - brawlBot.y, brawlPlayer.x - brawlBot.x);
+
+            brawlBotBullets.push({
+                x: brawlBot.x + brawlBot.width/2,
+                y: brawlBot.y + brawlBot.height/2,
+                vx: Math.cos(angle) * 8,
+                vy: Math.sin(angle) * 8,
+                radius: 6
+            });
+
+            brawlBotShootCooldown = 40;
+        }
+
+        function updateBrawlHealthBars() {
+            document.getElementById('brawl-p1-health').style.width = (brawlPlayer.health / brawlPlayer.maxHealth * 100) + '%';
+            document.getElementById('brawl-bot-health').style.width = (brawlBot.health / brawlBot.maxHealth * 100) + '%';
+        }
+
+        function respawnBrawlPlayer() {
+            brawlPlayer.health = brawlPlayer.maxHealth;
+            brawlPlayer.x = 100;
+            brawlPlayer.y = 200;
+            brawlBullets = [];
+            updateBrawlHealthBars();
+        }
+
+        function respawnBrawlBot() {
+            brawlBot.health = brawlBot.maxHealth;
+            brawlBot.x = 600 + Math.random() * 100;
+            brawlBot.y = 100 + Math.random() * 250;
+            brawlBotBullets = [];
+            updateBrawlHealthBars();
+        }
+
+        function updateBrawl() {
+            const speed = 5;
+
+            // Движение игрока
+            if (brawlKeys['w']) brawlPlayer.y = Math.max(0, brawlPlayer.y - speed);
+            if (brawlKeys['s']) brawlPlayer.y = Math.min(brawlCanvas.height - brawlPlayer.height, brawlPlayer.y + speed);
+            if (brawlKeys['a']) brawlPlayer.x = Math.max(0, brawlPlayer.x - speed);
+            if (brawlKeys['d']) brawlPlayer.x = Math.min(brawlCanvas.width - brawlPlayer.width, brawlPlayer.x + speed);
+
+            // ИИ бота - движение
+            const dx = brawlPlayer.x - brawlBot.x;
+            const dy = brawlPlayer.y - brawlBot.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance > 200) {
+                const botSpeed = 2;
+                if (dx > 0) brawlBot.x += botSpeed;
+                else brawlBot.x -= botSpeed;
+                if (dy > 0) brawlBot.y += botSpeed * 0.5;
+                else brawlBot.y -= botSpeed * 0.5;
+            }
+
+            // Бот стреляет
+            if (distance < 400) {
+                botShoot();
+            }
+
+            // Обновление пуль игрока
+            brawlBullets.forEach((bullet, index) => {
+                bullet.x += bullet.vx;
+                bullet.y += bullet.vy;
+
+                // Попадание в бота
+                const distToBot = Math.sqrt((bullet.x - brawlBot.x) ** 2 + (bullet.y - brawlBot.y) ** 2);
+                if (distToBot < 30) {
+                    brawlBot.health--;
+                    brawlBullets.splice(index, 1);
+                    updateBrawlHealthBars();
+
+                    if (brawlBot.health <= 0) {
+                        brawlPlayerScore++;
+                        document.getElementById('brawl-score').textContent = brawlPlayerScore;
+                        showNotification('🎯 Вы убили бота! ' + brawlPlayerScore + ' - ' + brawlBotScore);
+                        respawnBrawlBot();
+
+                        if (brawlPlayerScore >= 3) {
+                            showNotification('🏆 ВЫ ПОБЕДИЛИ! ' + brawlPlayerScore + ' - ' + brawlBotScore);
+                            setTimeout(() => {
+                                brawlPlayerScore = 0;
+                                brawlBotScore = 0;
+                                document.getElementById('brawl-score').textContent = 0;
+                                document.getElementById('brawl-bots').textContent = 0;
+                                respawnBrawlPlayer();
+                                respawnBrawlBot();
+                            }, 2000);
+                        }
+                    }
+                }
+
+                // Удаление пуль за экраном
+                if (bullet.x < 0 || bullet.x > brawlCanvas.width || bullet.y < 0 || bullet.y > brawlCanvas.height) {
+                    brawlBullets.splice(index, 1);
+                }
+            });
+
+            // Обновление пуль бота
+            brawlBotBullets.forEach((bullet, index) => {
+                bullet.x += bullet.vx;
+                bullet.y += bullet.vy;
+
+                // Попадание в игрока
+                const distToPlayer = Math.sqrt((bullet.x - brawlPlayer.x) ** 2 + (bullet.y - brawlPlayer.y) ** 2);
+                if (distToPlayer < 30) {
+                    brawlPlayer.health--;
+                    brawlBotBullets.splice(index, 1);
+                    updateBrawlHealthBars();
+
+                    if (brawlPlayer.health <= 0) {
+                        brawlBotScore++;
+                        document.getElementById('brawl-bots').textContent = brawlBotScore;
+                        showNotification('💀 Вас убили! ' + brawlPlayerScore + ' - ' + brawlBotScore);
+                        respawnBrawlPlayer();
+
+                        if (brawlBotScore >= 3) {
+                            showNotification('😢 ВЫ ПРОИГРАЛИ! ' + brawlPlayerScore + ' - ' + brawlBotScore);
+                            setTimeout(() => {
+                                brawlPlayerScore = 0;
+                                brawlBotScore = 0;
+                                document.getElementById('brawl-score').textContent = 0;
+                                document.getElementById('brawl-bots').textContent = 0;
+                                respawnBrawlPlayer();
+                                respawnBrawlBot();
+                            }, 2000);
+                        }
+                    }
+                }
+
+                // Удаление пуль за экраном
+                if (bullet.x < 0 || bullet.x > brawlCanvas.width || bullet.y < 0 || bullet.y > brawlCanvas.height) {
+                    brawlBotBullets.splice(index, 1);
+                }
+            });
+
+            // Кулдауны
+            if (brawlShootCooldown > 0) brawlShootCooldown--;
+            if (brawlBotShootCooldown > 0) brawlBotShootCooldown--;
+
+            drawBrawl();
+            brawlGameLoop = requestAnimationFrame(updateBrawl);
+        }
+
+        function drawBrawl() {
+            // Фон
+            const gradient = brawlCtx.createLinearGradient(0, 0, 0, brawlCanvas.height);
+            gradient.addColorStop(0, '#2d3436');
+            gradient.addColorStop(1, '#000000');
+            brawlCtx.fillStyle = gradient;
+            brawlCtx.fillRect(0, 0, brawlCanvas.width, brawlCanvas.height);
+
+            // Сетка
+            brawlCtx.strokeStyle = 'rgba(255,255,255,0.05)';
+            brawlCtx.lineWidth = 1;
+            for (let i = 0; i < brawlCanvas.width; i += 50) {
+                brawlCtx.beginPath();
+                brawlCtx.moveTo(i, 0);
+                brawlCtx.lineTo(i, brawlCanvas.height);
+                brawlCtx.stroke();
+            }
+            for (let i = 0; i < brawlCanvas.height; i += 50) {
+                brawlCtx.beginPath();
+                brawlCtx.moveTo(0, i);
+                brawlCtx.lineTo(brawlCanvas.width, i);
+                brawlCtx.stroke();
+            }
+
+            // Игрок
+            const playerGradient = brawlCtx.createRadialGradient(
+                brawlPlayer.x + brawlPlayer.width/2, brawlPlayer.y + brawlPlayer.height/2, 0,
+                brawlPlayer.x + brawlPlayer.width/2, brawlPlayer.y + brawlPlayer.height/2, 25
+            );
+            playerGradient.addColorStop(0, '#667eea');
+            playerGradient.addColorStop(1, '#764ba2');
+            brawlCtx.fillStyle = playerGradient;
+            brawlCtx.beginPath();
+            brawlCtx.arc(brawlPlayer.x + brawlPlayer.width/2, brawlPlayer.y + brawlPlayer.height/2, 20, 0, Math.PI * 2);
+            brawlCtx.fill();
+
+            // Бот
+            const botGradient = brawlCtx.createRadialGradient(
+                brawlBot.x + brawlBot.width/2, brawlBot.y + brawlBot.height/2, 0,
+                brawlBot.x + brawlBot.width/2, brawlBot.y + brawlBot.height/2, 25
+            );
+            botGradient.addColorStop(0, '#ff6b6b');
+            botGradient.addColorStop(1, '#ee5a24');
+            brawlCtx.fillStyle = botGradient;
+            brawlCtx.beginPath();
+            brawlCtx.arc(brawlBot.x + brawlBot.width/2, brawlBot.y + brawlBot.height/2, 20, 0, Math.PI * 2);
+            brawlCtx.fill();
+
+            // Пули игрока
+            brawlBullets.forEach(bullet => {
+                brawlCtx.fillStyle = '#00cec9';
+                brawlCtx.beginPath();
+                brawlCtx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
+                brawlCtx.fill();
+
+                // Свечение
+                brawlCtx.shadowColor = '#00cec9';
+                brawlCtx.shadowBlur = 10;
+                brawlCtx.fill();
+                brawlCtx.shadowBlur = 0;
+            });
+
+            // Пули бота
+            brawlBotBullets.forEach(bullet => {
+                brawlCtx.fillStyle = '#ff6b6b';
+                brawlCtx.beginPath();
+                brawlCtx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
+                brawlCtx.fill();
+
+                // Свечение
+                brawlCtx.shadowColor = '#ff6b6b';
+                brawlCtx.shadowBlur = 10;
+                brawlCtx.fill();
+                brawlCtx.shadowBlur = 0;
+            });
+        }
+
+        // ============================================
+        // МЕНЕДЖЕР ПРИЛОЖЕНИЙ
+        // ============================================
+        let installedApps = ['snake', 'duel', 'emoji', 'editor', 'manager', 'comics', 'chat', 'messages'];
+
+        function downloadApp(app, icon, name) {
+            if (installedApps.includes(app)) {
+                showNotification('⚠️ Уже установлено!');
+                return;
+            }
+
+            // Показываем уведомление
+            showNotification('⏳ Скачивание ' + name + '...');
+
+            // Находим кнопку и обновляем её
+            const buttons = document.querySelectorAll('.download-btn');
+            let targetBtn = null;
+            buttons.forEach(btn => {
+                if (btn.onclick && btn.onclick.toString().includes(`'${app}'`)) {
+                    targetBtn = btn;
+                }
+            });
+
+            if (targetBtn) {
+                targetBtn.textContent = '⏳ Скачивание...';
+                targetBtn.disabled = true;
+            }
+
+            setTimeout(() => {
+                installedApps.push(app);
+                showNotification('✅ ' + name + ' успешно установлено!');
+
+                if (targetBtn) {
+                    targetBtn.textContent = '✓ Установлено';
+                    targetBtn.classList.add('downloaded');
+                }
+
+                // Добавляем иконку на рабочий стол
+                addDesktopIcon(app, icon, name);
+
+                // Добавляем окно приложения если его нет
+                if (!document.getElementById(app + '-window')) {
+                    createAppWindow(app, icon, name);
+                }
+            }, 2000);
+        }
+
+        function addDesktopIcon(app, icon, name) {
+            const desktop = document.getElementById('desktop');
+            const existingIcons = document.querySelectorAll('.desktop-icon');
+            const existingIconsCount = existingIcons.length;
+
+            // Вычисляем позицию с учетом已有 иконок
+            let topPos = 20;
+            let leftPos = 20;
+
+            // Расставляем в сетку 4x4
+            const col = existingIconsCount % 4;
+            const row = Math.floor(existingIconsCount / 4);
+
+            topPos = 20 + (row * 130);
+            leftPos = 20 + (col * 120);
+
+            const iconDiv = document.createElement('div');
+            iconDiv.className = 'desktop-icon';
+            iconDiv.style.top = topPos + 'px';
+            iconDiv.style.left = leftPos + 'px';
+            iconDiv.onclick = () => openApp(app);
+            iconDiv.innerHTML = `
+                <div class="icon">${icon}</div>
+                <div class="label">${name}</div>
+            `;
+
+            // Вставляем перед первым окном
+            const firstWindow = desktop.querySelector('.window');
+            if (firstWindow) {
+                desktop.insertBefore(iconDiv, firstWindow);
+            } else {
+                desktop.appendChild(iconDiv);
+            }
+        }
+
+        function createAppWindow(app, icon, name) {
+            // Создаем окно для нового приложения
+            const desktop = document.getElementById('desktop');
+
+            const windowDiv = document.createElement('div');
+            windowDiv.className = 'window';
+            windowDiv.id = app + '-window';
+            windowDiv.style.top = '100px';
+            windowDiv.style.left = '200px';
+            windowDiv.style.width = '500px';
+            windowDiv.style.height = '400px';
+
+            windowDiv.innerHTML = `
+                <div class="window-header">
+                    <div class="window-title">${icon} ${name}</div>
+                    <div class="window-controls">
+                        <button class="minimize-btn" onclick="minimizeWindow('${app}')">−</button>
+                        <button class="maximize-btn" onclick="maximizeWindow('${app}')">□</button>
+                        <button class="close-btn" onclick="closeWindow('${app}')">×</button>
+                    </div>
+                </div>
+                <div class="window-content">
+                    <div style="text-align: center; padding: 40px;">
+                        <div style="font-size: 64px; margin-bottom: 20px;">${icon}</div>
+                        <h2>${name}</h2>
+                        <p style="opacity: 0.7; margin-top: 10px;">Приложение установлено!</p>
+                        <p style="opacity: 0.5; font-size: 14px; margin-top: 20px;">Скоро появится дополнительный функционал</p>
+                    </div>
+                </div>
+            `;
+
+            // Добавляем после остальных окон
+            desktop.appendChild(windowDiv);
+        }
+
+        // ============================================
+        // УВЕДОМЛЕНИЯ
+        // ============================================
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            // Автоматическое удаление с анимацией
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards';
+                setTimeout(() => notification.remove(), 400);
+            }, 3000);
+        }
+
+        // ============================================
+        // КОМИКСЫ
+        // ============================================
+        const comicsData = [
+            {
+                id: 1,
+                title: "Супергерой",
+                icon: "🦸",
+                description: "История о обычном парне, ставшем супергероем",
+                pages: [
+                    "Однажды обычный парень по имени Алекс шел по улице и вдруг увидел падающую метеориту...",
+                    "Метеорит ударился рядом с ним! Алекс не пострадал, но почувствовал странную энергию...",
+                    "Вдруг он понял, что может летать! Его тело стало сильным, а скорость - невероятной!",
+                    "Алекс решил использовать свои силы для добра. Он стал супергероем и защищать город!",
+                    "Теперь каждый день он спасает людей и борется со злом. Конец первой главы!"
+                ]
+            },
+            {
+                id: 2,
+                title: "Космические приключения",
+                icon: "🚀",
+                description: "Путешествие по галактике",
+                pages: [
+                    "Космический корабль 'Звездный путник' летел сквозь галактику...",
+                    "На борту был капитан Джон и его команда из смельчаков",
+                    "Вдруг они обнаружили новую планету, которой не было на карте!",
+                    "Они решили приземлиться и исследовать этот загадочный мир",
+                    "На планете они встретили дружелюбных инопланетян! Продолжение следует..."
+                ]
+            },
+            {
+                id: 3,
+                title: "Детектив",
+                icon: "🔍",
+                description: "Таинственное происшествие",
+                pages: [
+                    "В дождливую ночь раздался крик из особняка мистера Брауна",
+                    "Детектив Смит прибыл на место преступления немедленно",
+                    "Он нашел странную записку с зашифрованным посланием",
+                    "Расшифровав записку, он понял, кто это сделал!",
+                    "Преступник был пойман. Справедливость восторжествовала!"
+                ]
+            },
+            {
+                id: 4,
+                title: "Магия",
+                icon: "🧙",
+                description: "Мир волшебства и чудес",
+                pages: [
+                    "В долине магии жил молодой волшебник по имени Фларин",
+                    "Он учился в древней академии магии и искусства",
+                    "Однажды он обнаружил древнюю книгу заклинаний",
+                    "Но книга была проклята! Фларин должен был разрушить чары",
+                    "С помощью друзей он победил зло и стал великим магом!"
+                ]
+            }
+        ];
+
+        let currentComic = null;
+        let currentPage = 0;
+
+        function loadComicsGallery() {
+            const grid = document.getElementById('comics-grid');
+            grid.innerHTML = '';
+
+            comicsData.forEach(comic => {
+                const item = document.createElement('div');
+                item.className = 'comic-item';
+                item.innerHTML = `
+                    <div class="comic-cover">${comic.icon}</div>
+                    <div class="comic-info">
+                        <h3>${comic.title}</h3>
+                        <p>${comic.description}</p>
+                    </div>
+                `;
+                item.onclick = () => openComic(comic);
+                grid.appendChild(item);
+            });
+        }
+
+        function openComic(comic) {
+            currentComic = comic;
+            currentPage = 0;
+            document.getElementById('comic-title').textContent = comic.title;
+            document.getElementById('comic-content').textContent = comic.pages[0];
+            document.getElementById('comic-page-num').textContent = 'Страница 1 из ' + comic.pages.length;
+            document.getElementById('comic-viewer').classList.add('active');
+        }
+
+        function closeComicViewer() {
+            document.getElementById('comic-viewer').classList.remove('active');
+            currentComic = null;
+            currentPage = 0;
+        }
+
+        function nextComicPage() {
+            if (!currentComic || currentPage >= currentComic.pages.length - 1) return;
+            currentPage++;
+            document.getElementById('comic-content').textContent = currentComic.pages[currentPage];
+            document.getElementById('comic-page-num').textContent = 'Страница ' + (currentPage + 1) + ' из ' + currentComic.pages.length;
+        }
+
+        function prevComicPage() {
+            if (!currentComic || currentPage <= 0) return;
+            currentPage--;
+            document.getElementById('comic-content').textContent = currentComic.pages[currentPage];
+            document.getElementById('comic-page-num').textContent = 'Страница ' + (currentPage + 1) + ' из ' + currentComic.pages.length;
+        }
+
+        // Запуск загрузки (только если устройство выбрано)
+        if (deviceSelected) {
+            updateBootScreen();
+        }
+
+        // ============================================
+        // ЧАТ И МАСКОТ
+        // ============================================
+        let chatMessages = [];
+        let messageCount = 0;
+        let hackerActive = false;
+        let mascotDead = false;
+
+        function initChat() {
+            addBotMessage('Привет! Я Робот - твой маскот-помощник! 🤖');
+            setTimeout(() => {
+                addBotMessage('Чем могу помочь? Спроси меня что-нибудь!');
+            }, 1000);
+        }
+
+        function addMessage(sender, avatar, text, type = 'bot') {
+            const messagesDiv = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${type}`;
+
+            messageDiv.innerHTML = `
+                <div class="sender">
+                    <span class="avatar">${avatar}</span>
+                    <span>${sender}</span>
+                </div>
+                <div class="text">${text}</div>
+            `;
+
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            chatMessages.push({ sender, text, type });
+        }
+
+        function addBotMessage(text) {
+            addMessage('Робот 🤖', '🤖', text, 'bot');
+        }
+
+        function addHackerMessage(text) {
+            addMessage('???', '💀', text, 'hacker');
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+
+            if (!text) return;
+
+            addMessage('Вы', '👤', text, 'user');
+            input.value = '';
+            messageCount++;
+
+            // Ответы бота
+            setTimeout(() => {
+                processUserMessage(text);
+            }, 500);
+
+            // После 5 сообщений появляется хакер
+            if (messageCount >= 5 && !hackerActive) {
+                hackerActive = true;
+                setTimeout(() => {
+                    addHackerMessage('Привет... 👻');
+                    setTimeout(() => {
+                        addHackerMessage('Хочешь VIP статус? 😈');
+                        setTimeout(() => {
+                            addHackerMessage('Скачать VIP: vip-virus.exe 🎁');
+                            showNotification('⚠️ Новое сообщение от ???');
+                        }, 2000);
+                    }, 2000);
+                }, 3000);
+            }
+
+            // Если упоминаем VIP - появляется вирус
+            if (text.toLowerCase().includes('vip') && hackerActive) {
+                setTimeout(() => {
+                    addHackerMessage('Отлично! Скачиваю VIP... 💀');
+                    setTimeout(() => {
+                        triggerDeathScreen();
+                    }, 2000);
+                }, 1000);
+            }
+        }
+
+        function processUserMessage(text) {
+            const lowerText = text.toLowerCase();
+
+            if (lowerText.includes('привет') || lowerText.includes('здравств')) {
+                addBotMessage('Привет, друг! Рад тебя видеть! 😊');
+            } else if (lowerText.includes('как дела') || lowerText.includes('как ты')) {
+                addBotMessage('Отлично! Работаю на полную мощность! 🚀');
+            } else if (lowerText.includes('помощь') || lowerText.includes('help')) {
+                addBotMessage('Я могу помочь! Спроси меня про игры, систему или просто поболтаем! 💡');
+            } else if (lowerText.includes('игра') || lowerText.includes('игры')) {
+                addBotMessage('У нас есть куча игр! Змейка, Дуэль, Geometry Dash, Brawl Stars! 🎮');
+            } else if (lowerText.includes('спасибо') || lowerText.includes('благодар')) {
+                addBotMessage('Пожалуйста! Всегда рад помочь! 🙏');
+            } else if (lowerText.includes('что умеешь') || lowerText.includes('что можешь')) {
+                addBotMessage('Я маскот этой ОС! Могу подсказать, развеселить и просто поболтать! 🤖✨');
+            } else if (lowerText.includes('время')) {
+                const now = new Date();
+                addBotMessage(`Сейчас ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')} ⏰`);
+            } else if (lowerText.includes('???') || lowerText.includes('хакер')) {
+                addBotMessage('Осторожнее с незнакомыми! В интернете есть опасности... ⚠️');
+            } else {
+                const responses = [
+                    'Интересно! Расскажи больше! 🤔',
+                    'Понимаю! Продолжай! 👍',
+                    'Хм, задумчиво... 🤔',
+                    'Круто! 🎉',
+                    'Ага! Понял! 😊'
+                ];
+                addBotMessage(responses[Math.floor(Math.random() * responses.length)]);
+            }
+        }
+
+        function toggleMascotChat() {
+            if (mascotDead) {
+                showNotification('💀 Маскот погиб... Система повреждена');
+                return;
+            }
+            openApp('chat');
+        }
+
+        function triggerDeathScreen() {
+            mascotDead = true;
+
+            // Убиваем маскота
+            document.getElementById('mascot').classList.add('dead');
+            document.querySelector('.mascot-bubble').textContent = '💀';
+
+            // Показываем экран смерти
+            setTimeout(() => {
+                document.getElementById('death-screen').classList.add('active');
+            }, 1000);
+        }
+
+        // ============================================
+        // ПРИЛОЖЕНИЕ СООБЩЕНИЯ (TELEGRAM-STYLE)
+        // ============================================
+        let chats = [
+            {
+                id: 'robot',
+                name: '🤖 Робот',
+                avatar: '🤖',
+                type: 'robot',
+                lastMessage: 'Привет! Я твой помощник!',
+                time: '12:00',
+                online: true,
+                messages: [
+                    { text: 'Привет! Я Робот! 🤖', sent: false, time: '12:00' },
+                    { text: 'Рад помочь тебе!', sent: false, time: '12:00' }
+                ]
+            },
+            {
+                id: 'hacker',
+                name: '???',
+                avatar: '💀',
+                type: 'hacker',
+                lastMessage: 'Хочешь VIP? 😈',
+                time: '03:00',
+                online: true,
+                messages: [
+                    { text: 'Привет... 👻', sent: false, time: '02:55' },
+                    { text: 'Хочешь VIP статус бесплатно? 😈', sent: false, time: '03:00' },
+                    { text: 'Скачать VIP: vip-virus.exe 🎁', sent: false, time: '03:01' }
+                ]
+            }
+        ];
+
+        let activeChat = null;
+        let messagesAppHackerActive = false;
+
+        function initMessagesApp() {
+            const chatsList = document.getElementById('chats-list');
+            if (!chatsList) {
+                return;
+            }
+
+            renderChatsList();
+        }
+
+        function renderChatsList() {
+            const chatsList = document.getElementById('chats-list');
+            chatsList.innerHTML = '';
+
+            chats.forEach(chat => {
+                const chatItem = document.createElement('div');
+                chatItem.className = 'chat-item';
+                if (activeChat && activeChat.id === chat.id) {
+                    chatItem.classList.add('active');
+                }
+
+                chatItem.innerHTML = `
+                    <div class="chat-item-avatar ${chat.type}">${chat.avatar}</div>
+                    <div class="chat-item-info">
+                        <div class="chat-item-name">${chat.name}</div>
+                        <div class="chat-item-last-message">${chat.lastMessage}</div>
+                    </div>
+                    <div class="chat-item-time">${chat.time}</div>
+                `;
+
+                chatItem.onclick = () => openChat(chat);
+                chatsList.appendChild(chatItem);
+            });
+        }
+
+        function openChat(chat) {
+            activeChat = chat;
+            renderChatsList();
+            renderChatView(chat);
+        }
+
+        function renderChatView(chat) {
+            const chatView = document.getElementById('chat-view');
+
+            chatView.innerHTML = `
+                <div class="chat-view-header">
+                    <div class="avatar ${chat.type}">${chat.avatar}</div>
+                    <div class="info">
+                        <h3>${chat.name}</h3>
+                        <p>${chat.online ? '🟢 В сети' : '⚫ Не в сети'}</p>
+                    </div>
+                </div>
+                <div class="messages-container" id="messages-container"></div>
+                <div class="message-input-area">
+                    <input type="text" class="message-input" placeholder="Сообщение..."
+                           onkeypress="if(event.key==='Enter')sendTelegramMessage()" id="telegram-input">
+                    <button class="send-button" onclick="sendTelegramMessage()">➤</button>
+                </div>
+            `;
+
+            const container = document.getElementById('messages-container');
+            chat.messages.forEach(msg => {
+                addMessageToContainer(container, msg);
+            });
+
+            container.scrollTop = container.scrollHeight;
+
+            // Если это хакер и еще не активен - активируем его
+            if (chat.id === 'hacker' && !messagesAppHackerActive) {
+                messagesAppHackerActive = true;
+                setTimeout(() => {
+                    addTelegramMessage('hacker', 'Привет... 👻');
+                    setTimeout(() => {
+                        addTelegramMessage('hacker', 'Хочешь VIP? 😈');
+                    }, 2000);
+                }, 1000);
+            }
+        }
+
+        function addMessageToContainer(container, msg) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${msg.sent ? 'sent' : 'received'}`;
+            messageDiv.innerHTML = `
+                ${msg.text}
+                <div class="message-time">${msg.time}</div>
+            `;
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function addTelegramMessage(chatId, text) {
+            const chat = chats.find(c => c.id === chatId);
+            if (!chat) return;
+
+            const now = new Date();
+            const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+            const newMessage = { text, sent: false, time };
+            chat.messages.push(newMessage);
+            chat.lastMessage = text;
+            chat.time = time;
+
+            if (activeChat && activeChat.id === chatId) {
+                const container = document.getElementById('messages-container');
+                if (container) {
+                    addMessageToContainer(container, newMessage);
+                }
+            }
+
+            renderChatsList();
+        }
+
+        function sendTelegramMessage() {
+            if (!activeChat) return;
+
+            const input = document.getElementById('telegram-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const now = new Date();
+            const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+            const newMessage = { text, sent: true, time };
+            activeChat.messages.push(newMessage);
+            activeChat.lastMessage = text;
+            activeChat.time = time;
+
+            const container = document.getElementById('messages-container');
+            addMessageToContainer(container, newMessage);
+
+            input.value = '';
+            renderChatsList();
+
+            // Ответ от собеседника
+            setTimeout(() => {
+                if (activeChat.id === 'robot') {
+                    const responses = [
+                        'Интересно! 😊',
+                        'Понял! 👍',
+                        'Отлично! 🎉',
+                        'Хорошо! 👌',
+                        'Рад помочь! 🤖'
+                    ];
+                    addTelegramMessage('robot', responses[Math.floor(Math.random() * responses.length)]);
+                } else if (activeChat.id === 'hacker') {
+                    if (text.toLowerCase().includes('vip')) {
+                        addTelegramMessage('hacker', 'Отлично! Скачиваю VIP... 💀');
+                        setTimeout(() => {
+                            triggerDeathScreen();
+                        }, 2000);
+                    } else {
+                        addTelegramMessage('hacker', 'Скачай VIP! vip-virus.exe 🎁');
+                    }
+                }
+            }, 1000);
+        }
+
+        function restoreSystem() {
+            showNotification('🔄 Восстановление системы...');
+
+            setTimeout(() => {
+                mascotDead = false;
+                hackerActive = false;
+                messageCount = 0;
+                messagesAppHackerActive = false;
+
+                // Восстанавливаем маскота
+                document.getElementById('mascot').classList.remove('dead');
+                document.querySelector('.mascot-bubble').textContent = '💬 Нажми чтобы пообщаться!';
+
+                // Скрываем экран смерти
+                document.getElementById('death-screen').classList.remove('active');
+
+                // Очищаем чат
+                const chatMessagesEl = document.getElementById('chat-messages');
+                if (chatMessagesEl) chatMessagesEl.innerHTML = '';
+                chatMessages = [];
+
+                // Сбрасываем чаты в Сообщениях
+                chats = [
+                    {
+                        id: 'robot',
+                        name: '🤖 Робот',
+                        avatar: '🤖',
+                        type: 'robot',
+                        lastMessage: 'Привет! Я твой помощник!',
+                        time: '12:00',
+                        online: true,
+                        messages: [
+                            { text: 'Привет! Я Робот! 🤖', sent: false, time: '12:00' },
+                            { text: 'Рад помочь тебе!', sent: false, time: '12:00' }
+                        ]
+                    },
+                    {
+                        id: 'hacker',
+                        name: '???',
+                        avatar: '💀',
+                        type: 'hacker',
+                        lastMessage: 'Хочешь VIP? 😈',
+                        time: '03:00',
+                        online: true,
+                        messages: [
+                            { text: 'Привет... 👻', sent: false, time: '02:55' },
+                            { text: 'Хочешь VIP статус бесплатно? 😈', sent: false, time: '03:00' },
+                            { text: 'Скачать VIP: vip-virus.exe 🎁', sent: false, time: '03:01' }
+                        ]
+                    }
+                ];
+                activeChat = null;
+
+                // Перерисовываем список чатов
+                const chatsListEl = document.getElementById('chats-list');
+                if (chatsListEl) {
+                    renderChatsList();
+                    const chatView = document.getElementById('chat-view');
+                    if (chatView) {
+                        chatView.innerHTML = `
+                            <div class="no-chat-selected">
+                                <div class="icon">💬</div>
+                                <p>Выберите чат чтобы начать общение</p>
+                            </div>
+                        `;
+                    }
+                }
+
+                // Перезапускаем чат
+                setTimeout(() => {
+                    addBotMessage('Фух! Спасибо что восстановил систему! 😅');
+                    setTimeout(() => {
+                        addBotMessage('Больше не скачивай VIP от незнакомцев! ⚠️');
+                    }, 1500);
+                    showNotification('✅ Система восстановлена!');
+                }, 1000);
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
