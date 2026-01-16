@@ -2010,7 +2010,7 @@ alert('Моя первая программа!');"></textarea>
 
         // Проверка первого запуска
         if (localStorage.getItem('webOS_initialized')) {
-            // Был запущен ранее
+            // Был запущен ранее - сразу загружаем
             isFirstRun = false;
             document.getElementById('mascot-welcome').style.display = 'none';
             if (localStorage.getItem('deviceType') === 'mobile') {
@@ -2020,8 +2020,9 @@ alert('Моя первая программа!');"></textarea>
             deviceSelected = true;
             startBoot();
         } else {
-            // Первый запуск - показываем маскота
+            // Первый запуск - показываем маскота, скрываем загрузку
             document.getElementById('mascot-welcome').style.display = 'flex';
+            document.getElementById('boot-screen').style.display = 'none';
         }
 
         function startFromWelcome() {
