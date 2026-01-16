@@ -310,6 +310,8 @@
             background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080"><defs><linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23667eea"/><stop offset="100%" style="stop-color:%23764ba2"/></linearGradient></defs><rect fill="url(%23g1)" width="1920" height="1080"/></svg>') center/cover;
             position: relative;
             display: none;
+            visibility: visible;
+            opacity: 1;
         }
 
         /* Панель задач */
@@ -1558,7 +1560,7 @@
     </div>
 
     <!-- Загрузочный экран -->
-    <div id="boot-screen">
+    <div id="boot-screen" onclick="skipBoot()">
         <div class="logo">🖥️</div>
         <h1>Web OS</h1>
         <p>Загрузка системы...</p>
@@ -2046,6 +2048,32 @@ alert('Моя первая программа!');"></textarea>
             updateBootScreen();
         }
 
+        // Функция для пропуска загрузки (если застряла)
+        function skipBoot() {
+            console.log('Skipping boot...');
+
+            // Скрыть загрузочный экран
+            const bootScreen = document.getElementById('boot-screen');
+            if (bootScreen) {
+                bootScreen.style.display = 'none';
+            }
+
+            // Показать рабочий стол
+            const desktop = document.getElementById('desktop');
+            if (desktop) {
+                desktop.style.display = 'block';
+                desktop.style.visibility = 'visible';
+                desktop.style.opacity = '1';
+            }
+
+            // Инициализировать систему
+            try {
+                initializeOS();
+            } catch (e) {
+                console.error('Init error:', e);
+            }
+        }
+
         // Загрузка системы
         let bootProgress = 0;
         let bootTime = 20;
@@ -2069,8 +2097,12 @@ alert('Моя первая программа!');"></textarea>
             const timer = document.getElementById('boot-timer');
             const status = document.getElementById('boot-status');
 
-            if (!progress || !timer || !status) return;
+            if (!progress || !timer || !status) {
+                console.error('Boot elements not found');
+                return;
+            }
 
+            // Обновить прогресс
             progress.style.width = bootProgress + '%';
             timer.textContent = `Осталось: ${bootTime} секунд`;
 
@@ -2080,28 +2112,40 @@ alert('Моя первая программа!');"></textarea>
                 status.textContent = currentStatus.message;
             }
 
+            // Продолжать загрузку
             if (bootProgress < 100) {
                 bootProgress += 5;
                 bootTime = Math.max(0, 20 - Math.floor(bootProgress / 5));
                 setTimeout(updateBootScreen, 200);
             } else {
+                // ЗАГРУЗКА ЗАВЕРШЕНА - показать desktop ПРЯМО СЕЙЧАС
                 status.textContent = 'Готово!';
-                setTimeout(() => {
-                    const bootScreen = document.getElementById('boot-screen');
-                    const desktop = document.getElementById('desktop');
 
-                    if (bootScreen) bootScreen.style.display = 'none';
-                    if (desktop) {
-                        desktop.style.display = 'block';
-                        desktop.classList.add('fade-in');
-                    }
+                console.log('Boot complete, showing desktop...');
 
-                    try {
-                        initializeOS();
-                    } catch (e) {
-                        console.error('Init error:', e);
-                    }
-                }, 500);
+                // Скрыть загрузочный экран
+                const bootScreen = document.getElementById('boot-screen');
+                if (bootScreen) {
+                    bootScreen.style.display = 'none';
+                    console.log('Boot screen hidden');
+                }
+
+                // Показать рабочий стол
+                const desktop = document.getElementById('desktop');
+                if (desktop) {
+                    desktop.style.display = 'block';
+                    desktop.style.visibility = 'visible';
+                    desktop.style.opacity = '1';
+                    console.log('Desktop shown');
+                }
+
+                // Инициализировать систему
+                try {
+                    initializeOS();
+                    console.log('OS initialized');
+                } catch (e) {
+                    console.error('Init error:', e);
+                }
             }
         }
 
@@ -2168,12 +2212,21 @@ alert('Моя первая программа!');"></textarea>
         }
 
         function turnOn() {
+            // Проверяем что система выключена
+            const shutdownScreen = document.getElementById('shutdown-screen');
+            if (!shutdownScreen.classList.contains('active')) {
+                // Если не выключена - просто перезагружаем
+                location.reload();
+                return;
+            }
+
             // Скрыть экран выключения
-            document.getElementById('shutdown-screen').classList.remove('active');
+            shutdownScreen.classList.remove('active');
 
             // Показать загрузочный экран
-            document.getElementById('boot-screen').style.display = 'flex';
-            document.getElementById('boot-screen').classList.add('fade-in');
+            const bootScreen = document.getElementById('boot-screen');
+            bootScreen.style.display = 'flex';
+            bootScreen.classList.add('fade-in');
 
             // Перезапустить загрузку
             bootProgress = 0;
