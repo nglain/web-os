@@ -2032,6 +2032,8 @@ alert('Моя первая программа!');"></textarea>
 
             setTimeout(() => {
                 welcome.style.display = 'none';
+                // Показываем загрузочный экран
+                document.getElementById('boot-screen').style.display = 'flex';
                 // Сохраняем что система инициализирована
                 localStorage.setItem('webOS_initialized', 'true');
                 localStorage.setItem('deviceType', 'pc');
