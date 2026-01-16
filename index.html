@@ -2069,6 +2069,8 @@ alert('Моя первая программа!');"></textarea>
             const timer = document.getElementById('boot-timer');
             const status = document.getElementById('boot-status');
 
+            if (!progress || !timer || !status) return;
+
             progress.style.width = bootProgress + '%';
             timer.textContent = `Осталось: ${bootTime} секунд`;
 
@@ -2085,10 +2087,20 @@ alert('Моя первая программа!');"></textarea>
             } else {
                 status.textContent = 'Готово!';
                 setTimeout(() => {
-                    document.getElementById('boot-screen').style.display = 'none';
-                    document.getElementById('desktop').style.display = 'block';
-                    document.getElementById('desktop').classList.add('fade-in');
-                    initializeOS();
+                    const bootScreen = document.getElementById('boot-screen');
+                    const desktop = document.getElementById('desktop');
+
+                    if (bootScreen) bootScreen.style.display = 'none';
+                    if (desktop) {
+                        desktop.style.display = 'block';
+                        desktop.classList.add('fade-in');
+                    }
+
+                    try {
+                        initializeOS();
+                    } catch (e) {
+                        console.error('Init error:', e);
+                    }
                 }, 500);
             }
         }
