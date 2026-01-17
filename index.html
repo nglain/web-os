@@ -2046,32 +2046,21 @@ alert('Моя первая программа!');"></textarea>
 
         function startBoot() {
             updateBootScreen();
+
+            // Автоматически показать desktop через 30 секунд (запасной вариант)
+            setTimeout(() => {
+                const desktop = document.getElementById('desktop');
+                if (desktop && desktop.style.display === 'none') {
+                    console.log('Auto-showing desktop after timeout...');
+                    showDesktopDirectly();
+                }
+            }, 30000);
         }
 
         // Функция для пропуска загрузки (если застряла)
         function skipBoot() {
             console.log('Skipping boot...');
-
-            // Скрыть загрузочный экран
-            const bootScreen = document.getElementById('boot-screen');
-            if (bootScreen) {
-                bootScreen.style.display = 'none';
-            }
-
-            // Показать рабочий стол
-            const desktop = document.getElementById('desktop');
-            if (desktop) {
-                desktop.style.display = 'block';
-                desktop.style.visibility = 'visible';
-                desktop.style.opacity = '1';
-            }
-
-            // Инициализировать систему
-            try {
-                initializeOS();
-            } catch (e) {
-                console.error('Init error:', e);
-            }
+            showDesktopDirectly();
         }
 
         // Загрузка системы
@@ -2099,6 +2088,7 @@ alert('Моя первая программа!');"></textarea>
 
             if (!progress || !timer || !status) {
                 console.error('Boot elements not found');
+                showDesktopDirectly();
                 return;
             }
 
@@ -2118,34 +2108,49 @@ alert('Моя первая программа!');"></textarea>
                 bootTime = Math.max(0, 20 - Math.floor(bootProgress / 5));
                 setTimeout(updateBootScreen, 200);
             } else {
-                // ЗАГРУЗКА ЗАВЕРШЕНА - показать desktop ПРЯМО СЕЙЧАС
+                // ЗАГРУЗКА ЗАВЕРШЕНА
                 status.textContent = 'Готово!';
+                console.log('Boot complete!');
 
-                console.log('Boot complete, showing desktop...');
+                // Сразу показать desktop через 1 секунду
+                setTimeout(() => {
+                    showDesktopDirectly();
+                }, 1000);
+            }
+        }
 
-                // Скрыть загрузочный экран
-                const bootScreen = document.getElementById('boot-screen');
-                if (bootScreen) {
-                    bootScreen.style.display = 'none';
-                    console.log('Boot screen hidden');
-                }
+        function showDesktopDirectly() {
+            console.log('Showing desktop directly...');
 
-                // Показать рабочий стол
-                const desktop = document.getElementById('desktop');
-                if (desktop) {
-                    desktop.style.display = 'block';
-                    desktop.style.visibility = 'visible';
-                    desktop.style.opacity = '1';
-                    console.log('Desktop shown');
-                }
+            // Скрыть ВСЕ загрузочные экраны
+            const bootScreen = document.getElementById('boot-screen');
+            const mascotWelcome = document.getElementById('mascot-welcome');
 
-                // Инициализировать систему
-                try {
+            if (bootScreen) bootScreen.style.display = 'none';
+            if (mascotWelcome) mascotWelcome.style.display = 'none';
+            console.log('Boot screens hidden');
+
+            // Показать рабочий стол
+            const desktop = document.getElementById('desktop');
+            if (desktop) {
+                desktop.style.display = 'block';
+                desktop.style.visibility = 'visible';
+                desktop.style.opacity = '1';
+                desktop.style.position = 'relative';
+                desktop.style.zIndex = '1';
+                console.log('Desktop shown with display: block');
+            } else {
+                console.error('Desktop element not found!');
+            }
+
+            // Инициализировать систему
+            try {
+                if (typeof initializeOS === 'function') {
                     initializeOS();
-                    console.log('OS initialized');
-                } catch (e) {
-                    console.error('Init error:', e);
+                    console.log('OS initialized successfully');
                 }
+            } catch (e) {
+                console.error('Init error:', e);
             }
         }
 
